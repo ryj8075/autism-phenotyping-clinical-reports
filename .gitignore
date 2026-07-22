@@ -5,11 +5,16 @@ reports/
 reports_txt*/
 *.pdf
 # Report text and anything derived that still carries sentence-level text
+outputs/
 *sentences*.csv
-*sentences*.jsonl
+*sentences*.tsv
+*.jsonl
 *labeled*.csv
 *labeled*.jsonl
 metadata*.csv
+*.xlsx
+matching_details*.json
+*_meta_latest.json
 
 # ---- Credentials ----
 .env
