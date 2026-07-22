@@ -1,0 +1,16 @@
+# ============================================================
+# Stage 1 - High-Attention Sentence Extraction Configuration
+# ============================================================
+
+analysis:
+  top_k: 10
+  attention_method: column_sum
+
+paths:
+  nlp_asd_root: ../../1_classifier
+  intermediates_dir: ../../1_classifier/intermediates/489samples_epoch40_153stc_128tkn_epoch40_patience10_no_headings
+  tokenized_dir: ../../1_classifier/data/489reports/reports_tokenized_153stc_128tkn_no_headings
+  output_dir: outputs
+
+model:
+  tokenizer_name: klue/roberta-base

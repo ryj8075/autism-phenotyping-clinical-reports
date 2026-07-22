@@ -1,0 +1,82 @@
+# ============================================================
+# Silver Labeling Pipeline Configuration
+# ============================================================
+
+domains_file: ../../ontology/domains_19.yaml
+domains: []
+
+llm:
+  provider: local
+  model: llama3.1:8b
+  base_url: http://localhost:11434/v1
+  temperature: 0.7
+  max_tokens: 1024
+  timeout_sec: 180
+  max_retries: 3
+  retry_delay_sec: 2
+  self_consistency_n: 5
+  seed: 42
+
+prompt:
+  system: |
+    You are a clinical psychologist with expertise in autism spectrum disorder reports.
+    Read the given sentence and assign all applicable phenotype domains.
+
+    Rules:
+    1. If multiple domains apply, return all relevant domains and put the primary one first.
+    2. Assign a confidence score from 0.0 to 1.0 for each domain.
+    3. Write a brief rationale in English for each selected domain.
+    4. If no domain clearly applies, return only "other_general".
+    5. Return at most 3 domains.
+
+    Respond only with valid JSON:
+    {
+      "labels": [
+        {
+          "domain_id": "<domain ID>",
+          "confidence": <0.0-1.0>,
+          "rationale": "<brief rationale>"
+        }
+      ]
+    }
+
+  user_template: |
+    [Domain list]
+    {domain_list}
+
+    [Sentence]
+    {sentence}
+
+    Return at most 3 domain labels as valid JSON:
+    {{
+      "labels": [
+        {{
+          "domain_id": "<domain ID>",
+          "confidence": <0.0-1.0>,
+          "rationale": "<brief rationale>"
+        }}
+      ]
+    }}
+
+threshold:
+  confidence_min: 0.5
+  self_consistency_ratio: 0.5
+  max_labels: 3
+
+segmentation:
+  method: tokenizer_aligned
+  min_length: 30
+  max_length: 500
+
+paths:
+  input_dir: data/reports_txt_no_headings
+  output_dir: data/silver_label
+  log_dir: logs
+  gold_labels: data/gold_label/gold_labels_26reports.jsonl
+  silver_labels_file: silver_labels_26reports.jsonl
+
+runtime:
+  batch_size: 5
+  resume: true
+  save_every: 50
+  verbose: true

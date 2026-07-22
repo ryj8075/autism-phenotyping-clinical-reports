@@ -27,6 +27,8 @@ secrets*
 # ---- Model weights and large artifacts ----
 trained_models/
 custom_models/
+!pipeline/1_classifier/custom_models/
+!pipeline/1_classifier/custom_models/*.py
 checkpoints/
 *.pt
 *.bin
