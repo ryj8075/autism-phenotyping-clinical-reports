@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-test2_concentration.py — Does attention concentrate on phenotype-bearing content?
+concentration.py — Does attention concentrate on phenotype-bearing content?
 
 (2a) Content enrichment
   Pool all valid sentences across all 489 reports. Split into:

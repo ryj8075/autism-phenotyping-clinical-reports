@@ -512,7 +512,7 @@ def main() -> None:
 
     if not os.path.exists(extracted_path):
         logger.error("Extracted sentence JSONL file not found: %s", extracted_path)
-        logger.error("Run ../3_1_top_10_sentences/extract_all_high_attention_sentences.py first.")
+        logger.error("Run ../top_10_sentences/extract_all_high_attention_sentences.py first.")
         sys.exit(1)
 
     top_k = config["analysis"]["top_k"]

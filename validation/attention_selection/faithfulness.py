@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-test1_faithfulness.py — Does the top-K attention subset reconstruct a report's
+faithfulness.py — Does the top-K attention subset reconstruct a report's
 phenotype better than (or as well as) a random K-sentence subset?
 
 For each report we build three SILVER domain vectors:

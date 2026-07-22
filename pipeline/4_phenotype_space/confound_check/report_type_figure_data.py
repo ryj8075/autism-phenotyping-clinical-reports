@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
-"""t2 - report-type confound, figure data for Supplementary Figure S4.
+"""Report-type confound, figure data for Supplementary Figure S4.
 
-Companion to t1_confound_reanalysis.py, which runs the same confound check on all 489
+Companion to confound_reanalysis.py, which runs the same confound check on all 489
 reports. This one is restricted to the 346 ASD reports, so report type is not
 confounded with diagnosis, and it writes only the quantities the figure needs.
-refresh_figure_source.py copies the output into figure_source/report_type_confound.json.
+The output is copied into figure_source/report_type_confound.json, which
+scripts/figures/supplementary/FigureS4.R reads.
 
 Panel a: per-domain share of CLR variance explained by report type (19 domains),
          with BH-FDR q, on the 346 ASD reports.
@@ -28,7 +29,7 @@ sys.path.insert(0, CC_DIR)
 import _common_controlled as cc
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-OUT = os.path.join(HERE, "t2_report_type_figure_data.json")
+OUT = os.path.join(HERE, "report_type_figure_data.json")
 
 def bh_fdr(p):
     p = np.asarray(p, float); n = len(p); order = np.argsort(p)

@@ -19,11 +19,11 @@ echo "============================================================"
 
 echo ""
 echo "[1/2] TEST 1 — Faithfulness / representativeness"
-python3 test1_faithfulness.py
+python3 faithfulness.py
 
 echo ""
 echo "[2/2] TEST 2 — Attention concentrates on phenotype-bearing content"
-python3 test2_concentration.py
+python3 concentration.py
 
 echo ""
 echo "============================================================"

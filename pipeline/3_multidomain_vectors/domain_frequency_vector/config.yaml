@@ -17,7 +17,7 @@ analysis:
 
 paths:
   nlp_asd_root: ../../1_classifier
-  extracted_path: ../3_1_top_10_sentences/outputs/high_attention_sentences_latest.jsonl
+  extracted_path: ../top_10_sentences/outputs/high_attention_sentences_latest.jsonl
   intermediates_dir: ../../1_classifier/intermediates/489samples_epoch40_153stc_128tkn_epoch40_patience10_no_headings
   silver_labels_path: ../../2_silver_labeling/data/silver_label/silver_labels_26reports.jsonl
   tokenized_dir: ../../1_classifier/data/489reports/reports_tokenized_153stc_128tkn_no_headings

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-T1: Report-type confound reanalysis on 5-vote llama + GMM k=4 (v3.2).
+Report-type confound reanalysis on 5-vote llama + GMM k=4 (v3.2).
 
 Replicates singlevote analyses 4.1 (report-type confound identification) and
 4.2 (covariate-controlled re-verification) on the CURRENT k4 input, and adds:
@@ -19,7 +19,7 @@ Conventions:
     (ASD-only ILR -> sklearn PCA -> GMM k=4 on PC1-3, seed 42, n_init 5),
     matching step5 mode_discovery saved labels.
 
-Outputs JSON + console to this script's own folder (1_confound_check/).
+Outputs JSON + console to this script's own folder (confound_check/).
 """
 
 import json
@@ -44,7 +44,7 @@ REPO_ROOT = Path(__file__).resolve().parents[3]
 ROOT = Path(os.environ.get("REPORT_LLM_PIPELINE_ROOT", REPO_ROOT / "pipeline"))
 DATA_DIR = Path(os.environ.get(
     "DOMAIN_VECTOR_OUTPUT_DIR",
-    REPO_ROOT / "pipeline" / "3_multidomain_vectors" / "3_2_domain_frequency_vector" / "outputs",
+    REPO_ROOT / "pipeline" / "3_multidomain_vectors" / "domain_frequency_vector" / "outputs",
 ))
 DOMAIN_TSV = DATA_DIR / "domain_vectors_proportion_latest.tsv"
 DOMAIN_META = DATA_DIR / "domain_vectors_meta_latest.json"
@@ -60,7 +60,7 @@ REPORT_TXT_DIR = Path(os.environ.get(
 
 COVAR_CSV = Path(os.environ.get(
     "ATTENTION_COVARIATE_CSV",
-    REPO_ROOT / "pipeline" / "3_multidomain_vectors" / "3_1_top_10_sentences" /
+    REPO_ROOT / "pipeline" / "3_multidomain_vectors" / "top_10_sentences" /
     "outputs" / "group_analysis" / "merged_attention_with_keywords.csv",
 ))
 OUT_DIR = Path(__file__).resolve().parent
@@ -481,7 +481,7 @@ def main():
     results["supplementary_crosstabs"] = supp
 
     # save
-    out = OUT_DIR / f"t1_confound_results.json"
+    out = OUT_DIR / "confound_results.json"
     json.dump(results, open(out, "w"), indent=2, ensure_ascii=False)
     print(f"\n[saved] {out}")
 

@@ -36,7 +36,7 @@ GOLD = Path(os.environ.get(
 ))
 META = Path(os.environ.get(
     "DOMAIN_META_JSON",
-    REPO_ROOT / "pipeline" / "3_multidomain_vectors" / "3_2_domain_frequency_vector" /
+    REPO_ROOT / "pipeline" / "3_multidomain_vectors" / "domain_frequency_vector" /
     "outputs" / "domain_vectors_meta_latest.json",
 ))
 DOMAINS = json.load(open(META))["domain_columns"]

@@ -13,7 +13,7 @@ from scipy.special import digamma, gammaln
 REPO_ROOT = Path(__file__).resolve().parents[2]
 DATA_DIR = Path(os.environ.get(
     "DOMAIN_VECTOR_OUTPUT_DIR",
-    REPO_ROOT / "pipeline" / "3_multidomain_vectors" / "3_2_domain_frequency_vector" / "outputs",
+    REPO_ROOT / "pipeline" / "3_multidomain_vectors" / "domain_frequency_vector" / "outputs",
 ))
 PROPORTION_TSV = DATA_DIR / "domain_vectors_proportion_latest.tsv"
 META_JSON = DATA_DIR / "domain_vectors_meta_latest.json"

@@ -18,14 +18,14 @@ so these numbers validate the selector on the exact canonical phenotype space.
 Key reused logic (computation kept faithful to production):
   - Per-sentence attention score = column_sum of the attention matrix,
     restricted to valid sentences. This matches
-    pipeline/3_multidomain_vectors/3_1_top_10_sentences/extract_all_high_attention_sentences.py
+    pipeline/3_multidomain_vectors/top_10_sentences/extract_all_high_attention_sentences.py
     (compute_attention_importance, method="column_sum"), and because invalid
     columns sum to exactly 0 the production full-argsort naturally lands on
     valid sentences. We additionally mask invalid positions for robustness.
   - build_vector(): each sentence distributes mass 1.0 EQUALLY across its
     (active) silver labels, masses are summed over the sentence set, then the
     vector is L1-normalised to proportions (sum=1). This mirrors
-    pipeline/3_multidomain_vectors/3_2_domain_frequency_vector/build_domain_vectors.py
+    pipeline/3_multidomain_vectors/domain_frequency_vector/build_domain_vectors.py
     (allocation="equal", proportion vector). Sentences with no usable label are
     skipped.
 """
@@ -63,7 +63,7 @@ PATHS: Dict[str, Path] = {
     / "1_classifier/intermediates/489samples_epoch40_153stc_128tkn_epoch40_patience10_no_headings",
     # Domain list / definitions (19 domains, data-driven)
     "domain_meta": REPO_PIPELINE
-    / "3_multidomain_vectors/3_2_domain_frequency_vector/outputs/domain_vectors_meta_latest.json",
+    / "3_multidomain_vectors/domain_frequency_vector/outputs/domain_vectors_meta_latest.json",
     # Diagnosis metadata fallback
     "metadata": REPO_PIPELINE / "1_classifier/data/metadata/metadata_489reports.csv",
 }

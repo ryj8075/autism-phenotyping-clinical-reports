@@ -19,7 +19,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 DATA_ROOT = Path(os.environ.get("REPORT_LLM_DATA_ROOT", REPO_ROOT / "data"))
 DV = str(Path(os.environ.get(
     "DOMAIN_VECTORS_TSV",
-    REPO_ROOT / "pipeline" / "3_multidomain_vectors" / "3_2_domain_frequency_vector" /
+    REPO_ROOT / "pipeline" / "3_multidomain_vectors" / "domain_frequency_vector" /
     "outputs" / "domain_vectors_proportion_latest.tsv",
 )))
 SCORES = str(Path(os.environ.get(
