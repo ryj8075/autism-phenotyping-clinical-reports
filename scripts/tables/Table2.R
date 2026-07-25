@@ -8,14 +8,14 @@ m <- read.csv(META, stringsAsFactors = FALSE)
 m$type  <- ifelse(grepl("-A[0-9]+$", m$code), "A",
             ifelse(grepl("-P[0-9]+$", m$code), "P", NA))
 m$dx    <- ifelse(m$final_diag == 1, "Autism", "Non-autism")
-m$child <- sub("(-[0-9]+)?-[AP][0-9]+$", "", m$code)
+m$child <- sub("^(KHU-[A-Z]-[0-9]+).*$", "\\1", m$code)
 
 cnt <- function(dx, ty) sum(m$dx == dx & m$type == ty)
 report_tot <- function(ty) sum(m$type == ty)
 uchild <- function(ty) length(unique(m$child[m$type == ty]))
 
 t1 <- data.frame(
-  Group = c("Autism", "Non-autism", "Report total", "Unique children"),
+  Group = c("Autism", "Non-autism", "Report total", "Unique individuals"),
   `A-type` = c(cnt("Autism", "A"), cnt("Non-autism", "A"), report_tot("A"), uchild("A")),
   `P-type` = c(cnt("Autism", "P"), cnt("Non-autism", "P"), report_tot("P"), uchild("P")),
   Total = c(sum(m$dx == "Autism"), sum(m$dx == "Non-autism"), nrow(m), length(unique(m$child))),
