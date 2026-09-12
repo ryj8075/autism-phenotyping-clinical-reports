@@ -35,7 +35,7 @@ The 19 domains fall into seven Core ASD domains, nine Associated and co-occurrin
 
 ## Requirements
 
-Two Python environments were used. Stages 1 and 2 ran on an on-premise GPU server and stages 3 and 4 ran on a local machine, so the two do not share a package set.
+Two Python environments were used. Stages 1 and 2 ran on an on-premise GPU server and stages 3 and 4 ran on a local machine, so the two have different package sets.
 
 **Stage 1, classifier fine-tuning.** One NVIDIA A100 80GB GPU, Python 3.10, torch, transformers, and scikit-learn. The environment file is `pipeline/1_classifier/report_llm.yml`.
 
@@ -103,23 +103,23 @@ The silver-label and score-space checks are run one script at a time. Under `val
 
 ### Figures and tables
 
-The R scripts do not read the pipeline output tree directly. They read a flat directory of collected analysis outputs, `figure_source` for the figures and `table_source` for the tables. Assemble that directory yourself by copying in the JSON, TSV, CSV, and NPY files the scripts name, then point the scripts at it.
+Collect every output the figures need in `figure_source` and every output the tables need in `table_source`, then point the scripts at those two folders.
 
-Most files keep the name their producer gave them. These are renamed on the way in.
+Most files keep the name their producer gave them. These are the exceptions.
 
-| Produced as | Copy in as |
-| --- | --- |
-| `confound_check/report_type_figure_data.json` | `report_type_confound.json` |
-| `attention_selection/outputs/faithfulness_results.json` | `attention_faithfulness_results.json` |
-| `domain_set/drop_domains_robustness_results.json` | `sensitivity_drop_domains_results.json` |
-| `domain_set/downweight_robustness_results.json` | `sensitivity_downweight_results.json` |
-| `domain_set/heavytail_sensitivity_results.json` | `sensitivity_heavytail_results.json` |
+| Produced as | Copy in as | Folder |
+| --- | --- | --- |
+| `confound_check/report_type_figure_data.json` | `report_type_confound.json` | `figure_source` |
+| `attention_selection/outputs/faithfulness_results.json` | `attention_faithfulness_results.json` | `figure_source` |
+| `attention_selection/outputs/faithfulness_results.json` | `faithfulness_results.json`, unchanged | `table_source` |
+| `domain_set/drop_domains_robustness_results.json` | `sensitivity_drop_domains_results.json` | `table_source` |
+| `domain_set/downweight_robustness_results.json` | `sensitivity_downweight_results.json` | `table_source` |
+| `domain_set/heavytail_sensitivity_results.json` | `sensitivity_heavytail_results.json` | `table_source` |
 
-The first two go to `figure_source` and the three sensitivity files go to `table_source`, which reads `faithfulness_results.json` under its own name.
+Two inputs you prepare yourself, both for `figure_source`.
 
-One input has no producer in this repository. `FigureS2.R` reads `attention_exemplars_np.npy`, a two-report slice of the stage-1 `attention_matrices_np.npy` holding one A-type and one P-type example. Cut it yourself from the stage-1 output and place it in `figure_source`.
-
-`FigureS1.R` also reads `figS1_embedding_pca.csv`. Run `pipeline/1_classifier/analysis/FigureS1_make_data.py` after stage 1. It writes the file to `pipeline/1_classifier/figure_source/` from the stage-1 intermediates, and you copy it into `figure_source` with the rest.
+- `attention_exemplars_np.npy`, read by `FigureS2.R`. No script produces it. Cut a two-report slice from the stage-1 `attention_matrices_np.npy`, one A-type report and one P-type report.
+- `figS1_embedding_pca.csv`, read by `FigureS1.R`. Run `pipeline/1_classifier/analysis/FigureS1_make_data.py` after stage 1, then copy what it writes to `pipeline/1_classifier/figure_source/`.
 
 ```bash
 export REPORT_LLM_FIGURE_SOURCE_DIR=/path/to/figure_source
@@ -144,7 +144,7 @@ cd scripts/tables && Rscript Table1.R
 cd scripts/tables/supplementary && Rscript TableS1.R
 ```
 
-Script names match the numbering in the paper. Figure 1 is a schematic and has no script.
+Script names match the numbering in the paper.
 
 ### Paths and environment variables
 
