@@ -23,12 +23,7 @@ def _resolve_path(base_dir: Path, value: str | Path) -> str:
     path = Path(value)
     return str(path if path.is_absolute() else base_dir / path)
 
-# ============================================================
-
-# ============================================================
-
 def load_config(config_path: str) -> Dict[str, Any]:
-
     with open(config_path, encoding="utf-8") as f:
         cfg = yaml.safe_load(f)
 
@@ -40,10 +35,6 @@ def load_config(config_path: str) -> Dict[str, Any]:
     cfg["paths"].setdefault("output_dir", "outputs")
 
     return cfg
-
-# ============================================================
-
-# ============================================================
 
 def decode_sentences_from_tensor(
     input_tensor: torch.Tensor,
@@ -59,10 +50,6 @@ def decode_sentences_from_tensor(
         sentences.append(text)
     return sentences
 
-# ============================================================
-
-# ============================================================
-
 def compute_attention_importance(
     attention_matrix: np.ndarray,
     method: str = "column_sum",
@@ -74,10 +61,6 @@ def compute_attention_importance(
         return attention_matrix.sum(axis=1)
     else:
         raise ValueError(f"Unknown method: {method}")
-
-# ============================================================
-# 4. CLI
-# ============================================================
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
@@ -101,10 +84,6 @@ Examples:
     parser.add_argument("--output_dir", type=str, default=None)
     parser.add_argument("--verbose", "-v", action="store_true")
     return parser
-
-# ============================================================
-
-# ============================================================
 
 def main() -> None:
     parser = build_parser()

@@ -2,7 +2,7 @@
 """Slim-data generator for figS1 panel c (report-embedding PCA).
 Reads the 489-report attention-weighted sentence embeddings (460 MB intermediate),
 builds one report-level embedding = mean over each report's valid sentences, runs a
-2D PCA, attaches the MD-assessed diagnosis, and writes a tiny CSV that figS4.R reads.
+2D PCA, attaches the MD-assessed diagnosis, and writes a tiny CSV that FigureS1.R reads.
 Re-run only when the model run changes.  Output: figure_source/figS1_embedding_pca.csv"""
 from pathlib import Path
 import csv
@@ -49,6 +49,7 @@ def diag(code):
         return dx[code]
     return dx_patient.get(patient_id(code), "NA")
 
+OUT.parent.mkdir(parents=True, exist_ok=True)
 with open(OUT, "w", newline="") as f:
     w = csv.writer(f)
     w.writerow(["report_id", "PC1", "PC2", "diagnosis", "pc1_var_pct", "pc2_var_pct"])

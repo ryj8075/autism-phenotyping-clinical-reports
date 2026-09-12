@@ -12,19 +12,9 @@ OUT_FIGSRC = (
     if FIGURE_SOURCE_DIR else None
 )
 
-GROUP_LABEL = {"A": "ASD-core", "B": "Child-psychiatric", "C": "Format / other"}
-
-DISPLAY = {
-    "A1": "Social-emotional reciprocity", "A2": "Nonverbal communication",
-    "A3": "Relationship play", "A4": "Stereotyped behavior",
-    "A5": "Insistence on sameness", "A6": "Restricted interests",
-    "A7": "Sensory processing",
-    "B1": "Externalizing", "B2": "Internalizing", "B3": "Language skills",
-    "B4": "Physiological function", "B5": "Adaptive behavior",
-    "B6": "Intelligence/learning", "B7": "Executive function",
-    "B8": "Motor skills", "B9": "Family environment",
-    "C1": "Test scores", "C2": "Other/general", "C3": "Recommendations",
-}
+GROUP_LABEL = {"CO": "Core ASD domains",
+               "AS": "Associated and co-occurring features",
+               "RE": "Report elements and other"}
 
 def build_rows():
     d = yaml.safe_load(open(YAML, encoding="utf-8"))
@@ -33,11 +23,8 @@ def build_rows():
         for sub in cat.get("subcategories", []):
             for dom in sub.get("domains", []):
                 code = dom["code"]
-                grp = code[0]
-                name = DISPLAY.get(code)
-                if name is None:
-                    name = dom.get("name_en", dom["id"])
-                    print(f"  [warn] no DISPLAY label for {code}; falling back to name_en '{name}'")
+                grp = code[:2]
+                name = dom.get("name_en", dom["id"])
                 rows.append((code, grp, GROUP_LABEL.get(grp, grp), name))
     return rows
 
@@ -55,8 +42,8 @@ def main():
     for path in paths:
         write_csv(path, rows)
         print(f"  wrote {len(rows)} domains -> {path}")
-    n = {g: sum(1 for r in rows if r[1] == g) for g in ("A", "B", "C")}
-    print(f"  ({n['A']} A / {n['B']} B / {n['C']} C)")
+    n = {g: sum(1 for r in rows if r[1] == g) for g in ("CO", "AS", "RE")}
+    print(f"  ({n['CO']} CO / {n['AS']} AS / {n['RE']} RE)")
 
 if __name__ == "__main__":
     main()

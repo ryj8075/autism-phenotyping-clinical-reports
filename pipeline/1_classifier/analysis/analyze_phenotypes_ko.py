@@ -303,10 +303,6 @@ def analyze_pca_embeddings(lhs_embs_np, labels_np, output_path, experiment_name,
 
     return pca, pca_embs
 
-# ============================================================================
-
-# ============================================================================
-
 def analyze_high_attention_sentences(attns, sentences, sample_idx, label_str, threshold=0.05, top_k=10):
 
     results = {
@@ -690,12 +686,8 @@ def analyze_phenotypes(attention_matrices_np, decoded_reports, labels_np, output
         'most_attended_ctl': most_attended_sentences_ctl,
     }
 
-# ============================================================================
-
-# ============================================================================
 
 def load_dsm5_criteria(tokenizer, report_max_length, sentence_max_length):
-
     if not os.path.isdir(DSM_TXT_PATH):
         return None, None
     criteria_dict = {}

@@ -1,32 +1,63 @@
 #!/usr/bin/env Rscript
-# Table 3 — sentence-selector (KLUE-RoBERTa) 5-fold CV performance, three independent models.
-# All (n=489), A-type / autism-diagnostic (n=233), P-type / psych-assessment (n=256).
+# Table 3 — 19-domain phenotype ontology.
 rm(list = ls())
 source("_common.R")
-files <- c(All = "489samples", A = "asd233samples", P = "psy256samples")
-suffix <- "_epoch40_153stc_128tkn_epoch40_patience10_no_headings.txt"
-`%||%` <- function(a, b) if (is.null(a) || length(a) == 0) b else a
 
-# parse overall "METRIC: mean (+/- sd)"
-parse_overall <- function(tag) {
-  p <- file.path(RES, paste0(files[[tag]], suffix)); stopifnot(file.exists(p))
-  L <- readLines(p, warn = FALSE)
-  overall <- list()
-  for (l in L) {
-    mm <- regmatches(l, regexec("^([A-Za-z0-9_ ]+?):\\s+([0-9.]+)\\s*\\(\\+/-\\s*([0-9.]+)\\)", l))[[1]]
-    if (length(mm) == 4) overall[[trimws(mm[2])]] <- sprintf("%.3f (%.3f)", as.numeric(mm[3]), as.numeric(mm[4]))
-  }
-  overall
-}
-P <- lapply(names(files), parse_overall); names(P) <- names(files)
+df <- data.frame(
+  Code = c(
+    "CO1", "CO2", "CO3", "CO4", "CO5", "CO6", "CO7",
+    "AS1", "AS2", "AS3", "AS4", "AS5", "AS6", "AS7", "AS8", "AS9",
+    "RE1", "RE2", "RE3"
+  ),
+  Group = c(
+    rep("Core ASD domains", 7),
+    rep("Associated and co-occurring features", 9),
+    rep("Report elements and other", 3)
+  ),
+  Domain = c(
+    "Social-emotional reciprocity",
+    "Nonverbal communication",
+    "Social relationships",
+    "Stereotyped behavior",
+    "Insistence on sameness",
+    "Restricted interests",
+    "Sensory reactivity",
+    "Externalizing behaviors",
+    "Internalizing behaviors",
+    "Language skills",
+    "Physiological function",
+    "Adaptive behavior",
+    "Intellectual functioning and learning skills",
+    "Executive function",
+    "Motor skills",
+    "Family environment",
+    "Test scores",
+    "Other/general",
+    "Recommendations"
+  ),
+  Definition = c(
+    "Eye contact, response to name, joint attention, deficits in back-and-forth conversation, social and responsive smiling.",
+    "Use of gestures, facial expression, and body language, and the use and understanding of nonverbal communication.",
+    "Forming peer relationships, adjusting behavior to context, deficits in imaginative play, social and imitative play.",
+    "Hand flapping, body rocking, lining up objects, echolalia, repetitive movements.",
+    "Resistance to change in routines, ritualized communication patterns, insistence on routine, difficulty with transitions.",
+    "Abnormally intense preoccupation with specific topics, restricted and fixed interests.",
+    "Over-responsiveness to sound, fixation on textures, visual seeking, sensory hyper- or hypo-reactivity.",
+    "Aggression, self-injury, disruptive behavior, anger outbursts, with meltdown distinguished from shutdown.",
+    "Anxiety, depression, withdrawal, fear.",
+    "Functional language ability, receptive and expressive level, everyday language use, sentence complexity, currently observed language function.",
+    "Sleep patterns, eating habits including food selectivity, toileting.",
+    "Daily-living and self-care skills, social independence.",
+    "Verbal and nonverbal intelligence test results, learning ability.",
+    "Planning, working memory, inhibitory control.",
+    "Gross and fine motor development, coordination.",
+    "Parenting stress, family support system, medical and developmental history.",
+    "Scale scores such as ADOS, CARS, and K-WISC, and quantitative descriptions.",
+    "General interview content not directly tied to symptoms, background information, demographics, referral reason.",
+    "Recommendations for education or support based on the assessment results."
+  ),
+  check.names = FALSE,
+  stringsAsFactors = FALSE
+)
 
-# overall metrics: metric x {All, A, P}
-metrics <- unique(unlist(lapply(P, names)))
-metrics <- setdiff(metrics, "Loss")   # drop loss row
-ta <- data.frame(Metric = metrics,
-                 All = vapply(metrics, function(m) P$All[[m]] %||% NA_character_, character(1)),
-                 `A-type` = vapply(metrics, function(m) P$A[[m]]   %||% NA_character_, character(1)),
-                 `P-type` = vapply(metrics, function(m) P$P[[m]]   %||% NA_character_, character(1)),
-                 check.names = FALSE,
-                 stringsAsFactors = FALSE, row.names = NULL)
-write_table(ta, "Table3")
+write_table(df, "Table3")

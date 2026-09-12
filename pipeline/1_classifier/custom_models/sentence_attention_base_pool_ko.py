@@ -3,23 +3,9 @@ import torch
 from torch import nn
 from transformers import AutoModel, AutoModelForSequenceClassification, AutoConfig
 
-# ============================================================================
-
-# ============================================================================
-#
-
-#
-
-#
-
-# ============================================================================
-
 class SelfAttentionAverage(nn.Module):
-
     def __init__(self, embed_dim=768, weight_dim=768, dropout=0.0, classifier_dropout=0.0):
-
         super(SelfAttentionAverage, self).__init__()
-
         self.attn = nn.MultiheadAttention(
             embed_dim,
             num_heads=1,
@@ -28,13 +14,10 @@ class SelfAttentionAverage(nn.Module):
             batch_first=True,
             dropout=dropout
         )
-
         self.dropout_layer = nn.Dropout(p=classifier_dropout)
-
         self.linear = nn.Linear(weight_dim, 1)
 
     def forward(self, x, attn_mask=None, key_padding_mask=None, average_attn_weights=False):
-
         attn_output, attn_weights = self.attn(
             query=x,
             key=x,
@@ -45,29 +28,23 @@ class SelfAttentionAverage(nn.Module):
         )
 
         if key_padding_mask is not None:
-
             mask_expanded = key_padding_mask.unsqueeze(-1)  # (batch, num_sentences, 1)
             attn_output = attn_output.masked_fill(mask_expanded, 0.0)
 
         if key_padding_mask is not None:
-
             valid_mask = ~key_padding_mask
             valid_count = valid_mask.sum(dim=1, keepdim=True).float()  # (batch, 1)
             valid_count = valid_count.clamp(min=1.0)
-
             pooled_output = attn_output.sum(dim=1) / valid_count.squeeze(-1).unsqueeze(-1)  # (batch, embed_dim)
         else:
-
             pooled_output = torch.mean(attn_output, dim=1)
 
         pooled_output_drop = self.dropout_layer(pooled_output)
-
         log_reg = self.linear(pooled_output_drop).squeeze(-1)
 
         return log_reg, attn_weights, attn_output
 
 class SentenceAttentionBERTKorean(nn.Module):
-
     def __init__(
         self,
         base_model_name="klue/roberta-base",
@@ -83,7 +60,6 @@ class SentenceAttentionBERTKorean(nn.Module):
     ):
 
         super(SentenceAttentionBERTKorean, self).__init__()
-
         config = AutoConfig.from_pretrained(base_model_name)
 
         self.hidden_size = config.hidden_size
@@ -109,15 +85,11 @@ class SentenceAttentionBERTKorean(nn.Module):
         self.report_max_length = report_max_length
 
     def _create_sentence_padding_mask(self, attn_mask):
-
         valid_token_count = attn_mask.sum(dim=-1)  # (batch, num_sentences)
-
         sentence_padding_mask = valid_token_count <= 2
-
         return sentence_padding_mask
 
     def forward(self, input, attn_mask=None, sentence_attn_mask=None):
-
         if attn_mask is not None:
             sentence_padding_mask = self._create_sentence_padding_mask(attn_mask)
         else:

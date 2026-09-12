@@ -74,11 +74,11 @@ def pca_scores(M, k_lead=3):
     return p, s, s[:, :k_lead], p.explained_variance_ratio_
 
 def gmm_fit(lead, k):
-    g = GaussianMixture(n_components=k, covariance_type="full", n_init=5,
+    g = GaussianMixture(n_components=k, covariance_type="full", n_init=10,
                         random_state=SEED, max_iter=500).fit(lead)
     return g.predict(lead), g.predict_proba(lead), g
 
-# ── heavy-tail / multivariate-t helpers (step2 GMM-vs-t, step4 tail) ──────────
+# heavy-tail / multivariate-t helpers
 def mardia_z(X):
     """Multivariate kurtosis (Mardia) z-score + 99th-percentile excess (quantile ratio)."""
     n, p = X.shape

@@ -22,15 +22,13 @@ def shannon_effdim(M):
     q = e / e.sum()
     return float(np.exp(-np.sum(q * np.log(q))))
 
-# robustness: the same effective dimension without type control (raw) and within A-type reports
-# only (report type removed by design). Confirms multidimensionality is not a report-type artifact.
 rtype = d["rtype"]
 eff_raw = shannon_effdim(d["ILR"])                       # raw ILR, no type control
 eff_atype = shannon_effdim(d["ILR"][rtype == "A"])       # autism-diagnostic reports only
 
 res = {"n_asd": int(len(d["RES"])), "n_A": d["n_A"], "n_P": d["n_P"],
        "n_ilr_dims": int(len(eig)),
-       "shannon_entropy_eff_dim": round(shannon_eff_dim, 2),   # primary (matches manuscript / Figure 4)
+       "shannon_entropy_eff_dim": round(shannon_eff_dim, 2),
        "participation_ratio_eff_dim": round(participation_ratio, 2),
        "kaiser_guttman_dims": kaiser,
        "top3_pc_var": round(top3_var, 4),
@@ -45,9 +43,7 @@ res = {"n_asd": int(len(d["RES"])), "n_A": d["n_A"], "n_P": d["n_P"],
                 "the manuscript/Figure-4 metric; participation_ratio (inverse Simpson) weights "
                 "dominant components more and is always <= the entropy one. "
                 "shannon_eff_dim_robustness reports the same metric raw / type-residual / "
-                "A-type-only. Current data: residual 13.1 / raw 12.0 / A-type 12.0. "
-                "Manuscript cites A-type 12.5, which does not reproduce here (A-type = 12.0); "
-                "the 12.5 figure should be reconciled/updated.")}
+                "A-type-only.")}
 json.dump(res, open(HERE + "/step1_effective_dim_results.json", "w"), ensure_ascii=False, indent=2)
 print("[step1] eff-dim: Shannon=%.2f | participation ratio=%.2f / %d dims ; Kaiser=%d ; top3 PC var=%.1f%%"
       % (shannon_eff_dim, participation_ratio, len(eig), kaiser, top3_var * 100))

@@ -15,7 +15,7 @@ d = cc.load()
 _, scores, _, evr = cc.pca_scores(d["RES"])   # scores = all residual PCs
 n, ndim = scores.shape
 
-# ── (1) Mardia heavy-tail decomposition ──────────────────────────────────────
+# Mardia heavy-tail decomposition
 res = {"n_asd": int(n),
        "pc1_3": cc.mardia_z(scores[:, :3]),
        "pc4plus": cc.mardia_z(scores[:, 3:]),
@@ -23,7 +23,7 @@ res = {"n_asd": int(n),
        "pc13_var": round(float(evr[:3].sum()), 4),
        "pc4plus_var": round(float(evr[3:].sum()), 4)}
 
-# ── (2) Mahalanobis-to-prototype distribution ────────────────────────────────
+# Mahalanobis-to-prototype distribution
 mu = scores.mean(0)
 ci = np.linalg.inv(np.cov(scores, rowvar=False))
 diff = scores - mu
@@ -41,13 +41,12 @@ res["distribution"] = dict(
 res["note"] = ("excess99 = observed 99th-percentile Mahalanobis d^2 / chi-square 99th quantile "
                "(quantile ratio; >1 = tail stretched beyond Gaussian). Positive Mardia z in PC4+ "
                "=> heavy tail localized in residual dims = individual idiosyncrasy. "
-               "distribution = Mahalanobis-to-prototype histogram/QQ vs chi(df) (was step11).")
+               "distribution = Mahalanobis-to-prototype histogram/QQ vs chi(df).")
 json.dump(res, open(HERE + "/step4_residual_tail_results.json", "w"), ensure_ascii=False, indent=2)
 
-# ── figures ──────────────────────────────────────────────────────────────────
 NAVY, RED, BLUE, GREY = "#264653", "#CC4C48", "#3670B2", "#8896A8"
 
-# (a) histogram + chi(df) reference
+# histogram + chi(df) reference
 fig, ax = plt.subplots(figsize=(3.4, 3.0), dpi=300)
 bins = np.linspace(0, max(maha.max(), chi99) * 1.05, 28)
 ax.hist(maha, bins=bins, density=True, color=NAVY, alpha=0.80,
@@ -68,7 +67,7 @@ for ext in ("png", "pdf"):
     fig.savefig(os.path.join(HERE, f"step4_residual_tail_hist.{ext}"), bbox_inches="tight")
 plt.close(fig)
 
-# (b) Mahalanobis^2 QQ vs chi^2(df) + KS
+# Mahalanobis^2 QQ vs chi^2(df) + KS
 d2 = np.sort(maha ** 2)
 q = stats.chi2.ppf((np.arange(1, n + 1) - 0.5) / n, df=ndim)
 lim = float(max(q.max(), d2.max()))

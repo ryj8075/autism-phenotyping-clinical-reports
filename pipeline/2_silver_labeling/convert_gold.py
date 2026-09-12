@@ -66,7 +66,6 @@ def load_domains_for_convert(
     return active
 
 def build_code_lookup(domains: List[Dict[str, Any]]) -> Dict[str, Dict[str, Any]]:
-
     lookup = {}
     for d in domains:
         lookup[d["code"].upper()] = d
@@ -75,7 +74,6 @@ def build_code_lookup(domains: List[Dict[str, Any]]) -> Dict[str, Dict[str, Any]
     return lookup
 
 def _lookup_token(token: str, code_lookup: Dict[str, Dict[str, Any]]) -> Optional[str]:
-
     if token in code_lookup:
         return code_lookup[token]["id"]
 
@@ -155,7 +153,7 @@ def convert(
     valid_ids = {d["id"] for d in domains}
 
     fallback_id = "other_general"
-    fallback_code = "C2"
+    fallback_code = "RE2"
     for d in domains:
         if d["id"] == "other_general":
             fallback_id = d["id"]
@@ -188,7 +186,6 @@ def convert(
     domain_counter = Counter()
 
     for row_num, row in enumerate(ws.iter_rows(min_row=2, values_only=True), start=2):
-
         if row[0] is None and row[2] is None:
             continue
 

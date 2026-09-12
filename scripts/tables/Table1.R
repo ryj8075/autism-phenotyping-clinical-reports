@@ -1,63 +1,24 @@
 #!/usr/bin/env Rscript
-# Table 1 — 19-domain phenotype ontology.
+# Table 1 — dataset / cohort summary (489 reports, A/P x autism/non-autism + unique children)
 rm(list = ls())
 source("_common.R")
+stopifnot(file.exists(META))
 
-df <- data.frame(
-  Code = c(
-    "A1", "A2", "A3", "A4", "A5", "A6", "A7",
-    "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9",
-    "C1", "C2", "C3"
-  ),
-  Group = c(
-    rep("Core ASD domains", 7),
-    rep("Associated and co-occurring features", 9),
-    rep("Report elements and other", 3)
-  ),
-  Domain = c(
-    "Social-emotional reciprocity",
-    "Nonverbal communication",
-    "Social relationships",
-    "Stereotyped behavior",
-    "Insistence on sameness",
-    "Restricted interests",
-    "Sensory reactivity",
-    "Externalizing behaviors",
-    "Internalizing behaviors",
-    "Language skills",
-    "Physiological function",
-    "Adaptive behavior",
-    "Intellectual functioning and learning skills",
-    "Executive function",
-    "Motor skills",
-    "Family environment",
-    "Test scores",
-    "Other/general",
-    "Recommendations"
-  ),
-  Definition = c(
-    "Eye contact, response to name, joint attention, deficits in back-and-forth conversation, social and responsive smiling.",
-    "Use of gestures, facial expression, and body language, and the use and understanding of nonverbal communication.",
-    "Forming peer relationships, adjusting behavior to context, deficits in imaginative play, social and imitative play.",
-    "Hand flapping, body rocking, lining up objects, echolalia, repetitive movements.",
-    "Resistance to change in routines, ritualized communication patterns, insistence on routine, difficulty with transitions.",
-    "Abnormally intense preoccupation with specific topics, restricted and fixed interests.",
-    "Over-responsiveness to sound, fixation on textures, visual seeking, sensory hyper- or hypo-reactivity.",
-    "Aggression, self-injury, disruptive behavior, anger outbursts, with meltdown distinguished from shutdown.",
-    "Anxiety, depression, withdrawal, fear.",
-    "Functional language ability, receptive and expressive level, everyday language use, sentence complexity, currently observed language function.",
-    "Sleep patterns, eating habits including food selectivity, toileting.",
-    "Daily-living and self-care skills, social independence.",
-    "Verbal and nonverbal intelligence test results, learning ability.",
-    "Planning, working memory, inhibitory control.",
-    "Gross and fine motor development, coordination.",
-    "Parenting stress, family support system, medical and developmental history.",
-    "Scale scores such as ADOS, CARS, and K-WISC, and quantitative descriptions.",
-    "General interview content not directly tied to symptoms, background information, demographics, referral reason.",
-    "Recommendations for education or support based on the assessment results."
-  ),
+m <- read.csv(META, stringsAsFactors = FALSE)
+m$type  <- ifelse(grepl("-A[0-9]+$", m$code), "A",
+            ifelse(grepl("-P[0-9]+$", m$code), "P", NA))
+m$dx    <- ifelse(m$final_diag == 1, "Autism", "Non-autism")
+m$child <- sub("^(KHU-[A-Z]-[0-9]+).*$", "\\1", m$code)
+
+cnt <- function(dx, ty) sum(m$dx == dx & m$type == ty)
+report_tot <- function(ty) sum(m$type == ty)
+uchild <- function(ty) length(unique(m$child[m$type == ty]))
+
+t1 <- data.frame(
+  Group = c("Autism", "Non-autism", "Report total", "Unique individuals"),
+  `A-type` = c(cnt("Autism", "A"), cnt("Non-autism", "A"), report_tot("A"), uchild("A")),
+  `P-type` = c(cnt("Autism", "P"), cnt("Non-autism", "P"), report_tot("P"), uchild("P")),
+  Total = c(sum(m$dx == "Autism"), sum(m$dx == "Non-autism"), nrow(m), length(unique(m$child))),
   check.names = FALSE,
-  stringsAsFactors = FALSE
-)
-
-write_table(df, "Table1")
+  stringsAsFactors = FALSE)
+write_table(t1, "Table1")

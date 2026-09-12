@@ -8,10 +8,7 @@ from scipy import stats
 from scipy.special import digamma, gammaln
 from sklearn.mixture import GaussianMixture
 
-# ---------------------------------------------------------------------------
 # ILR transform
-# ---------------------------------------------------------------------------
-
 def _helmert_basis(D: int) -> np.ndarray:
     V = np.zeros((D, D - 1))
     for j in range(D - 1):
@@ -21,7 +18,6 @@ def _helmert_basis(D: int) -> np.ndarray:
     return V
 
 def ilr_transform(X: np.ndarray, pseudocount: float = 1e-6) -> Tuple[np.ndarray, np.ndarray]:
-
     X_adj = X + pseudocount
     X_adj = X_adj / X_adj.sum(axis=1, keepdims=True)
     log_X = np.log(X_adj)
@@ -29,19 +25,14 @@ def ilr_transform(X: np.ndarray, pseudocount: float = 1e-6) -> Tuple[np.ndarray,
     return log_X @ V, V
 
 def residualize_on_ptype(X_ilr: np.ndarray, ptype: np.ndarray) -> np.ndarray:
-
     ptype = np.asarray(ptype)
     is_p = (ptype == "P").astype(float)
     Z = np.column_stack([np.ones(len(is_p)), is_p])  # (N, 2)
     beta, *_ = np.linalg.lstsq(Z, X_ilr, rcond=None)
     return X_ilr - Z @ beta
 
-# ---------------------------------------------------------------------------
 # A. Heavy-tail test (Mardia)
-# ---------------------------------------------------------------------------
-
 def heavy_tail_test(X: np.ndarray) -> Dict:
-
     n, p = X.shape
     mu = X.mean(axis=0)
     cov = np.cov(X, rowvar=False)
@@ -71,12 +62,8 @@ def heavy_tail_test(X: np.ndarray) -> Dict:
         "d2_kurtosis": float(stats.kurtosis(d2, fisher=True)),
     }
 
-# ---------------------------------------------------------------------------
 # B. PCA / eigenvalue structure
-# ---------------------------------------------------------------------------
-
 def pca_analysis(X: np.ndarray) -> Dict:
-
     Xc = X - X.mean(axis=0)
     cov_mat = np.cov(Xc, rowvar=False)
     eigenvalues, eigenvectors = np.linalg.eigh(cov_mat)
@@ -107,10 +94,7 @@ def pca_analysis(X: np.ndarray) -> Dict:
         "scores": scores,
     }
 
-# ---------------------------------------------------------------------------
 # C. GMM vs multivariate t
-# ---------------------------------------------------------------------------
-
 def fit_t_distribution(X: np.ndarray, max_iter: int = 200,
                        tol: float = 1e-6) -> Tuple[float, float, float]:
 
@@ -162,7 +146,6 @@ def fit_t_distribution(X: np.ndarray, max_iter: int = 200,
     return float(nu), float(bic), float(ll)
 
 def gmm_vs_t_test(X_pca: np.ndarray, k_range=range(2, 9), seed: int = 42) -> Dict:
-
     results = {}
     for k in k_range:
         gmm = GaussianMixture(n_components=k, covariance_type="full",
@@ -189,10 +172,7 @@ def gmm_vs_t_test(X_pca: np.ndarray, k_range=range(2, 9), seed: int = 42) -> Dic
         "delta_bic_gmm_minus_t": float(delta_bic),
     }
 
-# ---------------------------------------------------------------------------
 # D. Deviation direction
-# ---------------------------------------------------------------------------
-
 def deviation_direction_test(X: np.ndarray, n_perm: int = 1000,
                              tail_percentile: float = 90.0,
                              seed: int = 42) -> Dict:
@@ -251,38 +231,10 @@ def deviation_direction_test(X: np.ndarray, n_perm: int = 1000,
         "verdict": verdict,
     }
 
-# ---------------------------------------------------------------------------
-# E. MGFS
-# ---------------------------------------------------------------------------
-
-def compute_mgfs(scores: np.ndarray) -> Dict:
-
-    n_pcs = scores.shape[1]
-    mean = scores.mean(axis=0)
-    cov = np.cov(scores, rowvar=False)
-    diag = np.ones(n_pcs) / np.sqrt(n_pcs)
-    proj = scores @ diag
-    proj_mean = mean @ diag
-    proj_std = float(np.sqrt(diag @ cov @ diag))
-    cdf = stats.norm.cdf(proj, loc=proj_mean, scale=proj_std)
-    mgfs = cdf * 10.0
-    return {
-        "mgfs": mgfs,
-        "projections": proj,
-        "proj_mean": float(proj_mean),
-        "proj_std": proj_std,
-        "mgfs_mean": float(mgfs.mean()),
-        "mgfs_median": float(np.median(mgfs)),
-        "mgfs_std": float(mgfs.std(ddof=1)),
-    }
-
-# ---------------------------------------------------------------------------
 # All-in-one runner
-# ---------------------------------------------------------------------------
-
 def run_all_checks(
     X_proportion: np.ndarray,
-    n_pcs_for_mgfs: int = 3,
+    n_lead_pcs: int = 3,
     n_perm_direction: int = 1000,
     seed: int = 42,
     residualize_ptype: np.ndarray = None,
@@ -298,25 +250,19 @@ def run_all_checks(
 
     pca_serializable = {k: v for k, v in pca.items() if k != "scores"}
 
-    n_pcs_used = min(n_pcs_for_mgfs, scores.shape[1])
+    n_pcs_used = min(n_lead_pcs, scores.shape[1])
     gmm_t = gmm_vs_t_test(scores[:, :n_pcs_used], seed=seed)
 
     dev = deviation_direction_test(X_ilr, n_perm=n_perm_direction, seed=seed)
-
-    mgfs = compute_mgfs(scores[:, :n_pcs_used])
-    mgfs_serializable = {k: v for k, v in mgfs.items()
-                         if k not in ("mgfs", "projections")}
 
     return {
         "A_heavy_tail": heavy,
         "B_eigenvalue": pca_serializable,
         "C_gmm_vs_t": gmm_t,
         "D_deviation_direction": dev,
-        "E_mgfs": mgfs_serializable,
 
         "_arrays": {
             "X_ilr": X_ilr,
             "pca_scores": scores,
-            "mgfs_values": mgfs["mgfs"],
         },
     }

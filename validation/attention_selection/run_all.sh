@@ -1,20 +1,12 @@
 #!/bin/bash
-# ===========================================================================
-# 1.7 Attention / phenotype faithfulness validation — run both tests in order
-# ===========================================================================
-# All input/output paths are centralised in _common.py (PATHS). No timestamps;
-# fixed output filenames. Only standard libs (numpy/pandas/scipy/sklearn/
-# matplotlib/pyyaml). This sub-pipeline only READS existing artifacts.
-#
-# Usage:
-#   bash run_all.sh
-# ===========================================================================
+# Attention / phenotype faithfulness validation — run both tests in order
+
 set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
 
 echo "============================================================"
-echo "  1.7 Attention / phenotype faithfulness validation"
+echo "  Attention / phenotype faithfulness validation"
 echo "============================================================"
 
 echo ""
@@ -28,8 +20,8 @@ python3 concentration.py
 echo ""
 echo "============================================================"
 echo "  Done."
-echo "    outputs/  : test1_results.json, test1_per_report.csv, test1_sweep.csv,"
-echo "                test2a_enrichment.csv, test2b_auroc.json"
-echo "    figures/  : test1_gold_reconstruction, test1_full_reconstruction,"
-echo "                test2a_enrichment_forest, test2b_auroc  (.png + .pdf)"
+echo "    outputs/  : faithfulness_results.json, faithfulness_per_report.csv, faithfulness_sweep.csv,"
+echo "                concentration_enrichment.csv, concentration_auroc.json"
+echo "    figures/  : faithfulness_gold_reconstruction, faithfulness_full_reconstruction,"
+echo "                concentration_enrichment_forest, concentration_auroc  (.png + .pdf)"
 echo "============================================================"

@@ -1,5 +1,3 @@
-### Imports ###
-
 import os
 import sys
 import random
@@ -40,17 +38,14 @@ from custom_models.sentence_attention_base_pool_ko import SentenceAttentionBERTK
 import wandb
 import argparse
 
-# ============================================================================
-
-# ============================================================================
 BASE_MODEL_NAME = "klue/roberta-base"
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATA_PATH = os.path.join(ROOT, "data")
-TYPE_PATH = os.path.join(DATA_PATH, "all1st309")
-REPORT_PATH = os.path.join(TYPE_PATH, "reports_txt")
+# Raw report .txt corpus, used only when --data_mode txt; override with REPORT_TXT_DIR.
+REPORT_PATH = os.environ.get(
+    "REPORT_TXT_DIR", os.path.join(DATA_PATH, "489reports", "reports_txt_no_headings"))
 
 def calculate_all_metrics(probs, labels):
-
     probs = np.array(probs)
     labels = np.array(labels)
     preds = (probs >= 0.5).astype(int)
@@ -89,9 +84,7 @@ def calculate_all_metrics(probs, labels):
     return metrics
 
 class EarlyStopping:
-
     def __init__(self, patience=3, min_delta=0.0):
-
         self.patience = patience
         self.min_delta = min_delta
         self.counter = 0
@@ -101,7 +94,6 @@ class EarlyStopping:
         self.best_attention_results = None
 
     def __call__(self, auroc, model, attention_results=None):
-
         if self.best_score is None:
             self.best_score = auroc
             self.save_checkpoint(model, attention_results)
@@ -115,7 +107,6 @@ class EarlyStopping:
             self.counter = 0
 
     def save_checkpoint(self, model, attention_results=None):
-
         if isinstance(model, nn.DataParallel):
             self.best_model_state = copy.deepcopy(model.module.state_dict())
         else:
@@ -334,7 +325,6 @@ def get_patient_based_split(pat_ids, label_tensor, test_ratio, seed):
     return trainval_idx, test_idx
 
 def train_model(config, use_wandb=False, verbose=True):
-
     seed = config.get('seed', 42)
     set_seed(seed)
 
@@ -413,7 +403,6 @@ def train_model(config, use_wandb=False, verbose=True):
     best_fold_auroc = 0.0
 
     n_samples = len(input_tensor_cv)
-    #report_max_length = config.get('report_max_length', 64)
     num_sentences = input_tensor_cv.shape[1]
     hidden_size = 768
 
@@ -583,7 +572,6 @@ def train_model(config, use_wandb=False, verbose=True):
     }
 
 def main():
-    ### Argument Parser ###
     parser = argparse.ArgumentParser(description='Korean Clinical Report Classification Training')
 
     parser.add_argument("--epochs", default=10, type=int, help="Maximum number of training epochs")

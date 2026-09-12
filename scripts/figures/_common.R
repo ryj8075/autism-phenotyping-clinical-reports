@@ -1,5 +1,5 @@
 #!/usr/bin/env Rscript
-# _common.R - shared paths, theme, and helpers
+# _common.R — shared paths, theme, and helpers
 rm(list = ls())
 suppressWarnings(Sys.setlocale("LC_CTYPE", "en_US.UTF-8"))
 
@@ -23,7 +23,7 @@ FS_DIR <- Sys.getenv("REPORT_LLM_FIGURE_SOURCE_DIR", file.path(REPO_ROOT, "figur
 if (dir.exists(.fig_out)) OUT_DIR <- normalizePath(.fig_out)
 TSV_PROP   <- file.path(FS_DIR, "domain_vectors_proportion_latest.tsv")
 META_JSON  <- file.path(FS_DIR, "domain_vectors_meta_latest.json")
-VAR_JSON   <- file.path(FS_DIR, "step9_variance_results.json")
+VAR_JSON   <- file.path(FS_DIR, "step9_variance_results.json")   # Fig 6 variance
 PROFILE_TSV<- file.path(FS_DIR, "controlled_individual_profiles.tsv")
 
 # palette
@@ -57,20 +57,20 @@ DOMAIN_LABEL <- c(
   other_general                = "Other/general",
   recommendations              = "Recommendations")
 
-# domain -> group code (A/B/C) and group display labels
-DOMAIN_GROUP <- setNames(rep(c("A", "B", "C"), c(7, 9, 3)), names(DOMAIN_LABEL))
-GROUP_LABEL  <- c(A = "Core ASD domains",
-                  B = "Associated and co-occurring features",
-                  C = "Report elements and other")
+# domain -> group code (CO/AS/RE) and group display labels
+DOMAIN_GROUP <- setNames(rep(c("CO", "AS", "RE"), c(7, 9, 3)), names(DOMAIN_LABEL))
+GROUP_LABEL  <- c(CO = "Core ASD domains",
+                  AS = "Associated and co-occurring features",
+                  RE = "Report elements and other")
 
 # categorical group palette
-# Colourblind-aware qualitative: A coral / B periwinkle / C grey
-GROUP_PAL  <- c(A = "#E28E6D", B = "#8DA0CB", C = "#9E9E9E")
+# Colourblind-aware qualitative: CO coral / AS periwinkle / RE grey
+GROUP_PAL  <- c(CO = "#E28E6D", AS = "#8DA0CB", RE = "#9E9E9E")
 GROUP_FILL <- setNames(unname(GROUP_PAL), unname(GROUP_LABEL))  # keyed by display label
 
 # helpers: internal id vector -> display label / group factor
 dlabel <- function(ids) unname(DOMAIN_LABEL[ids])
-dgroup <- function(ids) factor(unname(DOMAIN_GROUP[ids]), levels = c("A", "B", "C"),
+dgroup <- function(ids) factor(unname(DOMAIN_GROUP[ids]), levels = c("CO", "AS", "RE"),
                                labels = GROUP_LABEL)
 
 domain_columns <- function() jsonlite::fromJSON(META_JSON)$domain_columns

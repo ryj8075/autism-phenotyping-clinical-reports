@@ -1,19 +1,5 @@
 #!/usr/bin/env python3
-"""T2-(1): 5-vote self-consistency (inter-vote agreement) -- CURRENT canonical data.
 
-Adapted (2026-06-27) from t2_1_inter_vote_agreement.py for the full silver
-(silver_labels_26reports.jsonl, 489-cohort schema, 19 domains).
-
-NEW SCHEMA NOTE:
-  - Each sentence has raw_responses = 5 votes; each vote now carries a LIST of
-    {domain_id, domain_code, confidence, ...} (multi-label), confidence-descending.
-  - For per-vote single-category agreement (Fleiss kappa, modal agreement) we take
-    each vote's PRIMARY domain = its highest-confidence label (the first one).
-    An empty vote (no labels) -> "(none)" abstention category.
-  - mean domains per sentence is computed from the aggregated `labels` list.
-
-This stays a SELF-CONSISTENCY metric (same LLM, 5 stochastic runs), not inter-annotator.
-"""
 import json
 import os
 from collections import Counter
@@ -22,11 +8,11 @@ from pathlib import Path
 import numpy as np
 
 BASE = Path(__file__).resolve().parent
-REPO_ROOT = Path(__file__).resolve().parents[3]
+REPO_ROOT = Path(__file__).resolve().parents[2]
 SILVER = Path(os.environ.get(
     "SILVER_LABELS_JSONL",
     REPO_ROOT / "pipeline" / "2_silver_labeling" / "data" / "silver_label" /
-    "silver_labels_26reports.jsonl",
+    "silver_labels_489reports.jsonl",
 ))
 META = Path(os.environ.get(
     "DOMAIN_META_JSON",
@@ -160,7 +146,7 @@ def main():
         p(f"{d:<28}{int(m.sum()):>6}{mm.mean() / 5:>12.3f}{(mm == 5).mean():>11.3f}")
 
     out = dict(
-        timestamp=ts, schema="full489_26gold", n_total_sentences=len(labels_per_sentence),
+        timestamp=ts, schema="full489", n_total_sentences=len(labels_per_sentence),
         n_sentences_5vote=int(n), n_no_raw=int(n_no_raw),
         mean_domains_per_sentence=mean_domains_per_sentence,
         labels_per_sentence_dist={int(k): int(v) for k, v in Counter(labels_per_sentence).items()},
@@ -178,11 +164,12 @@ def main():
         note=("Per-vote primary domain = highest-confidence label of the 5-vote multi-label "
               "responses; empty vote -> (none). Same-LLM 5-run self-consistency, not "
               "inter-annotator. mean_domains_per_sentence from aggregated labels."))
-    out_json = BASE / f"t2_1_inter_vote_agreement_full489_26gold_{ts}.json"
+    out_json = BASE / "inter_vote_agreement_results.json"
+    out_txt = BASE / "inter_vote_agreement_summary.txt"
     json.dump(out, open(out_json, "w"), indent=2, ensure_ascii=False)
-    (BASE / "t2_1_inter_vote_agreement_full489_26gold.txt").write_text("\n".join(lines) + "\n")
+    out_txt.write_text("\n".join(lines) + "\n")
     p(f"\n[saved] {out_json}")
-    p(f"[saved] {BASE / 't2_1_inter_vote_agreement_full489_26gold.txt'}")
+    p(f"[saved] {out_txt}")
 
 if __name__ == "__main__":
     main()

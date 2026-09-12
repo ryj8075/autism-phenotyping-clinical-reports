@@ -1,29 +1,5 @@
 #!/usr/bin/env python3
-"""
-concentration.py — Does attention concentrate on phenotype-bearing content?
 
-(2a) Content enrichment
-  Pool all valid sentences across all 489 reports. Split into:
-    HIGH = the top-K (K=10) attention sentences per report
-    LOW  = all remaining valid sentences (background)
-  For each of the 19 domains compute its share of label-mass in HIGH vs LOW,
-  the log-odds (and proportion difference), a two-proportion z-test, and
-  BH-corrected q-values. Mass per sentence is split equally across its labels
-  (consistent with build_vector), so a sentence contributes its mass to the
-  pooled domain counts of its group.
-
-(2b) Diagnostic signal
-  Per-report domain vectors from top-K / random-K / FULL. For each source run
-  5-fold stratified logistic-regression CV predicting ASD vs non-ASD; report
-  AUROC mean +/- sd. random-K is averaged over a small number of seeds.
-
-Outputs (outputs/):
-  test2a_enrichment.csv       per-domain HIGH/LOW shares, log-odds, z, p, q
-  test2b_auroc.json           AUROC by source
-Figures (figures/):
-  test2a_enrichment_forest    per-domain log-odds (HIGH vs LOW), colored by group
-  test2b_auroc                AUROC by source
-"""
 from __future__ import annotations
 
 import json
@@ -63,7 +39,6 @@ def main() -> None:
     K = C.TOP_K_PRIMARY
     idx = {d: i for i, d in enumerate(domain_order)}
 
-    # ---------------- (2a) content enrichment ----------------
     high_mass = np.zeros(len(domain_order))
     low_mass = np.zeros(len(domain_order))
 
@@ -125,11 +100,11 @@ def main() -> None:
         r["q_bh"] = float(qv)
 
     df2a = pd.DataFrame(rows)
-    # order by code for readability
-    df2a = df2a.sort_values("code").reset_index(drop=True)
-    df2a.to_csv(C.OUTPUTS_DIR / "test2a_enrichment.csv", index=False)
+    GORDER = {"CO": 0, "AS": 1, "RE": 2}
+    df2a["_g"] = df2a["code"].str[:2].map(GORDER)
+    df2a = df2a.sort_values(["_g", "code"]).drop(columns="_g").reset_index(drop=True)
+    df2a.to_csv(C.OUTPUTS_DIR / "concentration_enrichment.csv", index=False)
 
-    # ---------------- (2b) diagnostic signal ----------------
     rng = np.random.default_rng(C.RANDOM_SEED)
 
     def silver_vec_for(rid: str, sent_indices: List[int]) -> Optional[np.ndarray]:
@@ -200,10 +175,9 @@ def main() -> None:
         "per_selection_mean": [float(x) for x in rand_means],
     }
 
-    with open(C.OUTPUTS_DIR / "test2b_auroc.json", "w", encoding="utf-8") as f:
+    with open(C.OUTPUTS_DIR / "concentration_auroc.json", "w", encoding="utf-8") as f:
         json.dump(auroc_results, f, ensure_ascii=False, indent=2)
 
-    # ---------------- figures ----------------
     _fig_enrichment(df2a)
     _fig_auroc(auroc_results)
     _print_summary(df2a, auroc_results)
@@ -213,8 +187,9 @@ def _fig_enrichment(df: pd.DataFrame) -> None:
     import matplotlib.pyplot as plt
     from matplotlib.patches import Patch
 
-    # order by code (A1..C3) top-to-bottom
-    d = df.sort_values("code", ascending=False).reset_index(drop=True)
+    GORDER = {"CO": 0, "AS": 1, "RE": 2}
+    d = df.assign(_g=df["code"].str[:2].map(GORDER))
+    d = d.sort_values(["_g", "code"], ascending=False).drop(columns="_g").reset_index(drop=True)
     ypos = np.arange(len(d))
     colors = [C.GROUP_COLORS[g] for g in d["group"]]
 
@@ -226,7 +201,6 @@ def _fig_enrichment(df: pd.DataFrame) -> None:
                        fontsize=8)
     ax.set_xlabel("Log-odds of label mass, high-attention vs background")
 
-    # mark significance (q<0.05) with asterisk
     for yi, (lo, qv) in enumerate(zip(d["log_odds_high_vs_low"], d["q_bh"])):
         if qv < 0.05:
             offset = 0.04 * (1 if lo >= 0 else -1) * max(abs(d["log_odds_high_vs_low"]).max(), 1e-6)
@@ -234,12 +208,12 @@ def _fig_enrichment(df: pd.DataFrame) -> None:
             ax.text(lo + offset, yi, "*", va="center", ha=ha, fontsize=11)
 
     legend = [
-        Patch(facecolor=C.GROUP_COLORS["A"], label="A: ASD-core"),
-        Patch(facecolor=C.GROUP_COLORS["B"], label="B: general psychiatric"),
-        Patch(facecolor=C.GROUP_COLORS["C"], label="C: formal / other"),
+        Patch(facecolor=C.GROUP_COLORS["CO"], label="CO: Core ASD domains"),
+        Patch(facecolor=C.GROUP_COLORS["AS"], label="AS: Associated and co-occurring features"),
+        Patch(facecolor=C.GROUP_COLORS["RE"], label="RE: Report elements and other"),
     ]
     ax.legend(handles=legend, frameon=False, fontsize=8, loc="lower right")
-    C.save_fig(fig, "test2a_enrichment_forest")
+    C.save_fig(fig, "concentration_enrichment_forest")
     plt.close(fig)
 
 def _fig_auroc(res: Dict) -> None:
@@ -262,7 +236,7 @@ def _fig_auroc(res: Dict) -> None:
     ax.set_ylim(0.4, 1.0)
     for xi, m in zip(x, means):
         ax.text(xi, m + 0.01, f"{m:.3f}", ha="center", va="bottom", fontsize=8)
-    C.save_fig(fig, "test2b_auroc")
+    C.save_fig(fig, "concentration_auroc")
     plt.close(fig)
 
 def _print_summary(df2a: pd.DataFrame, res: Dict) -> None:

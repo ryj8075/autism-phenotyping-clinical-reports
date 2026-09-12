@@ -1,11 +1,5 @@
 # -*- coding: utf-8 -*-
-"""step1: are H1 (multidimensional) and H2 (no stable subtype) robust when low-fidelity domains are
-DOWN-WEIGHTED (soft) rather than excluded (hard)?
 
-Mirrors ../drop_domains_robustness.py but on the two continuous-weight variants. baseline_full19 is
-included for reference and must reproduce the canonical numbers (eff_dim 13.14, PC1 0.208, t_wins,
-ARI k2 0.995 / k4 0.513).
-"""
 import sys, json
 from pathlib import Path
 import numpy as np
@@ -14,7 +8,7 @@ from sklearn.metrics import adjusted_rand_score
 
 BASE = Path(__file__).resolve().parent
 sys.path.insert(0, str(BASE.parent))          # 2_2 root for _sensitivity_common
-import _sensitivity_common as sc               # noqa: E402
+import _sensitivity_common as sc
 cc = sc.cc
 N_SEED = 30
 

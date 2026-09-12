@@ -3,22 +3,16 @@ import argparse
 from pathlib import Path
 
 def remove_headings(text: str) -> str:
-
     text = re.sub(r'## [^#]+? ##', '', text)
-
     text = re.sub(r' +', ' ', text)
-
     text = text.strip()
-
     return text
 
 def process_file(input_path: Path, output_path: Path, encoding: str = "utf-8") -> None:
-
     with open(input_path, "r", encoding=encoding) as f:
         text = f.read()
 
     processed_text = remove_headings(text)
-
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
     with open(output_path, "w", encoding=encoding) as f:

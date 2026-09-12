@@ -8,7 +8,6 @@ run () {
   if python3 "$1"; then echo "  done"; else echo "  FAIL: $1"; fail=1; fi
 }
 
-# the confound check runs first; the steps below use its type-residual coordinates
 echo "> confound_check/run_all.sh"
 if bash confound_check/run_all.sh; then echo "  done"; else echo "  FAIL: confound_check"; fail=1; fi
 

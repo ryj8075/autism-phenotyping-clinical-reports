@@ -32,23 +32,23 @@ DOMAINS = ["social_emotional_reciprocity","nonverbal_communication","relationshi
            "externalizing","internalizing","language_skills","physiological_function","adaptive_behavior",
            "intelligence_learning","executive_function","motor_skills","family_environment",
            "test_scores","other_general","recommendations"]
-SOCIAL = ["social_emotional_reciprocity","nonverbal_communication","relationship_play"]   # A1-A3
-RRB = ["stereotyped_behavior","insistence_on_sameness","restricted_interests","sensory_processing"]  # A4-A7
+SOCIAL = ["social_emotional_reciprocity","nonverbal_communication","relationship_play"]   # CO1-CO3
+RRB = ["stereotyped_behavior","insistence_on_sameness","restricted_interests","sensory_processing"]  # CO4-CO7
 CORE = SOCIAL + RRB
-CLUSTERS = ["social_A1A3", "rrb_A4A7", "core_ASD_total"]
+CLUSTERS = ["social_CO1CO3", "rrb_CO4CO7", "core_ASD_total"]
 ROW_DOMAINS = DOMAINS + CLUSTERS
 
 A_SCORES = ["ADOS_SA_raw","ADOS_RRB_raw","ADOS_CSS","ADIR_social_A","ADIR_comm_B","ADIR_rrb_C","CARS_total"]
 P_SCORES = ["FSIQ","VABS_comm_std","VABS_dls_std","VABS_social_std","VABS_motor_std","VABS_composite_std"]
 
 A_CONV = {("social_emotional_reciprocity","ADOS_SA_raw"),("nonverbal_communication","ADOS_SA_raw"),
-          ("relationship_play","ADOS_SA_raw"),("social_A1A3","ADOS_SA_raw"),("social_A1A3","ADIR_social_A"),
+          ("relationship_play","ADOS_SA_raw"),("social_CO1CO3","ADOS_SA_raw"),("social_CO1CO3","ADIR_social_A"),
           ("social_emotional_reciprocity","ADIR_social_A"),("nonverbal_communication","ADIR_social_A"),
           ("relationship_play","ADIR_social_A"),
           ("stereotyped_behavior","ADOS_RRB_raw"),("insistence_on_sameness","ADOS_RRB_raw"),
-          ("restricted_interests","ADOS_RRB_raw"),("sensory_processing","ADOS_RRB_raw"),("rrb_A4A7","ADOS_RRB_raw"),
+          ("restricted_interests","ADOS_RRB_raw"),("sensory_processing","ADOS_RRB_raw"),("rrb_CO4CO7","ADOS_RRB_raw"),
           ("stereotyped_behavior","ADIR_rrb_C"),("insistence_on_sameness","ADIR_rrb_C"),
-          ("restricted_interests","ADIR_rrb_C"),("sensory_processing","ADIR_rrb_C"),("rrb_A4A7","ADIR_rrb_C"),
+          ("restricted_interests","ADIR_rrb_C"),("sensory_processing","ADIR_rrb_C"),("rrb_CO4CO7","ADIR_rrb_C"),
           ("language_skills","ADIR_comm_B"),("nonverbal_communication","ADIR_comm_B"),
           ("core_ASD_total","ADOS_CSS"),("core_ASD_total","CARS_total")}
 P_CONV = {("intelligence_learning","FSIQ"),("executive_function","FSIQ"),
@@ -67,7 +67,7 @@ P_DISC_ADMIN = {("family_environment","FSIQ"),("test_scores","FSIQ"),
                 ("physiological_function","VABS_composite_std")}
 
 P_COMORBID = {("stereotyped_behavior","FSIQ"),("sensory_processing","VABS_composite_std"),
-              ("rrb_A4A7","VABS_composite_std"),("core_ASD_total","FSIQ")}
+              ("rrb_CO4CO7","VABS_composite_std"),("core_ASD_total","FSIQ")}
 
 def bh_fdr(pvals):
     p = np.asarray(pvals, float); n = len(p); order = np.argsort(p)
@@ -102,15 +102,15 @@ def _matrix(d, scores):
 def build_track(df, scores):
 
     d = df.copy()
-    d["social_A1A3"] = d[SOCIAL].sum(1); d["rrb_A4A7"] = d[RRB].sum(1); d["core_ASD_total"] = d[CORE].sum(1)
+    d["social_CO1CO3"] = d[SOCIAL].sum(1); d["rrb_CO4CO7"] = d[RRB].sum(1); d["core_ASD_total"] = d[CORE].sum(1)
     R_raw, q_raw = _matrix(d, scores)                            # PRIMARY
     clr_mat = clr(d[DOMAINS].values)
     dc = df.copy()
     for k, dom in enumerate(DOMAINS):
         dc[dom] = clr_mat[:, k]
     idx = {dom: k for k, dom in enumerate(DOMAINS)}
-    dc["social_A1A3"] = clr_mat[:, [idx[x] for x in SOCIAL]].mean(1)
-    dc["rrb_A4A7"] = clr_mat[:, [idx[x] for x in RRB]].mean(1)
+    dc["social_CO1CO3"] = clr_mat[:, [idx[x] for x in SOCIAL]].mean(1)
+    dc["rrb_CO4CO7"] = clr_mat[:, [idx[x] for x in RRB]].mean(1)
     dc["core_ASD_total"] = clr_mat[:, [idx[x] for x in CORE]].mean(1)
     R_clr, q_clr = _matrix(dc, scores)                           # SECONDARY (robustness)
     return R_raw, q_raw, R_clr, q_clr

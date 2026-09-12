@@ -1,28 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Shared variant builder for the Figure 4/5/6 domain-fidelity sensitivity (steps 1-3).
 
-Builds a common set of 6 phenotype-space representations from the SAME canonical ASD-346
-type-residual pipeline (`_common_controlled`), differing only in how low-fidelity domains are
-handled:
-  - baseline_full19            : all 19 domains
-  - drop_sentence_f1_lt_0.3    : exclude domains with sentence-level F1 < 0.3   (from analysis 2_1)
-  - drop_report_rho_lt_0.3     : exclude domains with report-level Spearman < 0.3
-  - drop_report_rho_lt_0       : exclude domains with report-level Spearman < 0
-  - downweight_sentence_f1     : multiply each domain's proportion mass by clip(F1, 0, 1)
-  - downweight_report_rho      : multiply each domain's proportion mass by max(0, rho)
-
-Exclusion/weighting is applied on the proportion (composition) vector BEFORE clr/ILR. Weights are
-fidelity scores that naturally live in [0,1] (clipped F1, or max(0, rho)); we apply them at their
-natural scale, which is the reported design choice. NOTE: clr (`_common_controlled.clr`) is NOT
-exactly scale-invariant here because it adds a FIXED additive PSEUDOCOUNT (1e-6) before
-renormalizing -- so the *relative* weights are what chiefly drive the result, but the absolute
-weight scale is not fully irrelevant: rescaling the whole weight vector shifts how the pseudocount
-floors near-zero-weight domains. A domain weighted to ~0 (e.g. physiological_function, F1=0) is
-therefore effectively soft-dropped with a pseudocount floor, i.e. down-weighting shades into
-exclusion at the low end. Each variant returns its type-residualized ILR matrix RES, computed with
-the identical design (intercept + report-type P) used by the canonical pipeline, so
-baseline_full19.RES == cc.load()["RES"] exactly.
-"""
 import os
 import sys, json
 from pathlib import Path
@@ -37,17 +14,27 @@ sys.path.insert(0, CC)
 import _common_controlled as cc  # noqa: E402
 
 VALID = Path(os.environ.get("SILVER_VALIDATION_DIR", REPO_ROOT / "validation" / "silver_labels"))
+# Written by ../sentence_level.py (into its own folder) and ../report_level.py
+# (into its results/ subfolder). Run both before any script in this folder.
 PRF = Path(os.environ.get(
     "SENTENCE_LEVEL_VALIDATION_JSON",
-    VALID / "sentence_level" / "sentence_level_validation_results.json",
+    VALID / "sentence_level_validation_results.json",
 ))
 REPORT_JSON = Path(os.environ.get(
     "REPORT_LEVEL_VALIDATION_JSON",
-    VALID / "report_level" / "results" / "results_full_vs_gold_llama_full489_26gold.json",
+    VALID / "results" / "results_full_vs_gold_llama_full489_26gold.json",
 ))
 
 def fidelity():
     """Return (f1_by_domain, report_rho_by_domain)."""
+    for path, producer in ((PRF, "validation/silver_labels/sentence_level.py"),
+                           (REPORT_JSON, "validation/silver_labels/report_level.py")):
+        if not path.exists():
+            raise FileNotFoundError(
+                f"gold-fidelity input not found: {path}\n"
+                f"Run {producer} first, or point the corresponding environment "
+                f"variable (SENTENCE_LEVEL_VALIDATION_JSON / "
+                f"REPORT_LEVEL_VALIDATION_JSON) at an existing file.")
     f1 = {r["domain"]: r["f1"] for r in json.load(open(PRF))["per_domain"]}
     rho = {d: v["spearman"] for d, v in json.load(open(REPORT_JSON))["per_domain"].items()}
     return f1, rho

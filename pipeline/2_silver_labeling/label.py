@@ -21,7 +21,6 @@ logger = logging.getLogger(__name__)
 _JSON_BLOCK = re.compile(r"```(?:json)?\s*([\s\S]*?)```")
 
 def _extract_json(text: str) -> str:
-
     m = _JSON_BLOCK.search(text)
     if m:
         return m.group(1).strip()
@@ -33,7 +32,6 @@ def _extract_json(text: str) -> str:
     return text.strip()
 
 def _repair_json(raw: str) -> Optional[dict]:
-
     raw = raw.strip()
     # trailing comma before } or ]
     raw = re.sub(r",\s*([}\]])", r"\1", raw)
@@ -118,7 +116,6 @@ def parse_llm_response(
     return LLMResponse(labels=items)
 
 class Labeler:
-
     def __init__(self, config: Dict[str, Any]):
         self.cfg = config
         self.llm_cfg = config["llm"]
@@ -195,7 +192,6 @@ class Labeler:
         return self._client
 
     def _call_llm(self, sentence: str, seed: Optional[int] = None) -> str:
-
         client = self._get_client()
         provider = self.llm_cfg.get("provider", "openai")
 
@@ -247,6 +243,8 @@ class Labeler:
                         max_tokens=self.llm_cfg.get("max_tokens", 1024),
                         timeout=self.llm_cfg.get("timeout_sec", 60),
                     )
+                    if seed is not None:
+                        kwargs["seed"] = seed
                     resp = client.chat.completions.create(**kwargs)
                     return resp.choices[0].message.content or ""
 

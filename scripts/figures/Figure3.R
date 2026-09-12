@@ -3,11 +3,11 @@
 rm(list = ls())
 source("_common.R")
 
-SILVER <- file.path(FS_DIR, "silver_labels_26reports.jsonl")
+SILVER <- file.path(FS_DIR, "silver_labels_489reports.jsonl")
 GOLD   <- file.path(FS_DIR, "gold_labels_26reports.jsonl")
 
 dom <- domain_columns()
-ordered_codes <- c(paste0("A", 1:7), paste0("B", 1:9), paste0("C", seq_len(length(dom) - 16)))
+ordered_codes <- c(paste0("CO", 1:7), paste0("AS", 1:9), paste0("RE", seq_len(length(dom) - 16)))
 stopifnot(length(dom) == length(ordered_codes))
 
 read_jsonl <- function(p) lapply(readLines(p, warn = FALSE), function(l) if (nzchar(trimws(l))) fromJSON(l) else NULL)
@@ -38,7 +38,7 @@ rho <- vapply(dom, function(d) {
 name <- dlabel(dom)
 
 map <- data.frame(code = ordered_codes, name = name, r = as.numeric(rho[dom]), stringsAsFactors = FALSE)
-map$group <- factor(substr(map$code, 1, 1), levels = c("A", "B", "C"),
+map$group <- factor(substr(map$code, 1, 2), levels = c("CO", "AS", "RE"),
                     labels = c("Core ASD\ndomains",
                                "Associated and\nco-occurring\nfeatures",
                                "Report\nelements\nand other"))

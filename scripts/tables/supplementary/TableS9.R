@@ -41,7 +41,7 @@ df <- data.frame(
     "domain kept if its mean confidence is at least 0.5",
     "3 (requested in the prompt and applied as a hard cap after aggregation)",
     "tokenizer-aligned to the attention model, minimum segment length 30 characters",
-    "other_general (C2) when no domain qualifies"
+    "other_general (RE2) when no domain qualifies"
   ),
   check.names = FALSE,
   stringsAsFactors = FALSE

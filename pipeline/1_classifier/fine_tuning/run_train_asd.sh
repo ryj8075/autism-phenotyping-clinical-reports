@@ -22,5 +22,6 @@ python "$SCRIPT_DIR/roberta_sentence_attention_run_ko.py" \
   --lr 1e-5 \
   --save_fold_models \
   --save_intermediates \
+  --no_wandb \
   --report_max_length 153 \
   --sentence_max_length 128

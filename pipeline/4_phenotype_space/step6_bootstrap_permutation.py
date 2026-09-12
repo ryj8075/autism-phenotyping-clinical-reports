@@ -1,18 +1,5 @@
 # -*- coding: utf-8 -*-
-"""step6 (controlled): bootstrap + permutation-null stability of the GMM partition at EVERY k,
-on the SAME type-residual PC1-3 as seed_stability (step6_seed_stability.py).
 
-For each k in K_LIST (matching the cross-seed ARI range k=2..8):
-  1. Bootstrap (N_BOOT): resample reports with replacement, refit GMM(k), predict the
-     ORIGINAL reports, ARI vs the k-reference partition -> sample-level robustness.
-  2. Permutation null (N_PERM): shuffle the reference labels, ARI vs reference -> chance baseline.
-Effect size per k = bootstrap ARI mean vs the permutation null (Cohen's d + one-sided p).
-
-Reporting every k (not just one candidate) makes the argument free of a "why this k" choice:
-the table shows sample stability (bootstrap) declining alongside init stability (cross-seed ARI)
-as k grows. A significant permutation p only means above-chance reproducibility; the subtype
-rejection rests on the ARI DECLINE across k and on BIC (t beats every GMM k), not on any single p.
-"""
 import sys, os, json
 from datetime import datetime
 import numpy as np
@@ -24,7 +11,7 @@ import _common_controlled as cc
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 
-# ---- settings (option A: 1,000 bootstrap / 10,000 permutation), all k 2..8 ----
+# settings
 K_LIST     = [2, 3, 4, 5, 6, 7, 8]
 N_BOOT     = 1000
 N_PERM     = 10000
@@ -44,12 +31,12 @@ def summarise(a, name):
 def run_one_k(k, lead, n, rng):
     ref_labels = gmm(k, cc.SEED).fit(lead).predict(lead)
 
-    # 1. bootstrap: resample -> refit -> predict original -> ARI vs reference
+    # bootstrap: resample -> refit -> predict original -> ARI vs reference
     boot = np.empty(N_BOOT)
     for b in range(N_BOOT):
         idx = rng.integers(0, n, size=n)
         boot[b] = adjusted_rand_score(ref_labels, gmm(k, b).fit(lead[idx]).predict(lead))
-    # 2. permutation null: shuffle reference labels -> ARI vs reference
+    # permutation null: shuffle reference labels -> ARI vs reference
     null = np.empty(N_PERM)
     for p in range(N_PERM):
         perm = ref_labels.copy()
@@ -71,7 +58,7 @@ def run_one_k(k, lead, n, rng):
     }
 
 def main():
-    # same controlled pipeline as seed_stability: type-residual ILR -> PCA -> PC1-3
+    # type-residual ILR -> PCA -> PC1-3
     d = cc.load()
     _, _, lead, evr = cc.pca_scores(d["RES"])
     n = lead.shape[0]

@@ -158,7 +158,6 @@ def load_config(
     return cfg
 
 def load_progress(output_path: Path) -> set:
-
     done = set()
     if output_path.exists():
         with open(output_path, encoding="utf-8") as f:
@@ -174,7 +173,6 @@ def load_progress(output_path: Path) -> set:
     return done
 
 def run_label(config: Dict[str, Any], args: argparse.Namespace) -> None:
-
     input_dir = Path(config["paths"]["input_dir"])
     output_dir = Path(config["paths"]["output_dir"])
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -291,7 +289,6 @@ def run_label(config: Dict[str, Any], args: argparse.Namespace) -> None:
     _generate_summary(output_path, output_dir, registry=registry)
 
 def _make_registry(config: Dict[str, Any]) -> DomainRegistry:
-
     domains = []
     for d in config["domains"]:
 
@@ -308,7 +305,6 @@ def _make_registry(config: Dict[str, Any]) -> DomainRegistry:
     return DomainRegistry(domains)
 
 def _flush_buffer(buffer: List[str], output_path: Path) -> None:
-
     with open(output_path, "a", encoding="utf-8") as f:
         for line in buffer:
             f.write(line + "\n")
@@ -426,7 +422,6 @@ def _generate_summary(
     print("=" * 72)
 
 def run_summary(config: Dict[str, Any]) -> None:
-
     output_dir = Path(config["paths"]["output_dir"])
 
     silver_name = config["paths"].get("silver_labels_file", "silver_labels.jsonl")
@@ -512,8 +507,6 @@ Examples:
         help="Override LLM endpoint (instead of config.llm.base_url), such as an Ollama or vLLM URL for local provider",
     )
     return parser
-
-# ── main ─────────────────────────────────────────────────────
 
 def main() -> None:
     parser = build_parser()

@@ -1,17 +1,5 @@
 # -*- coding: utf-8 -*-
-"""2_2: robustness of the MAIN conclusions to dropping poorly-validated domains.
 
-Reviewer R2/R4 asked whether the phenotype-space conclusions survive removing domains whose
-silver labels agree poorly with gold. We drop domains by sentence-level F1 (from 2_1), renormalize
-the proportion vectors over the kept domains, redo ILR -> type-residualize -> PCA, and recompute the
-three headline signals, then compare to the full-19 baseline:
-  (1) multidimensional  -> effective dimensionality (and its fraction of the max) + PC1 EVR
-  (2) no discrete subtype-> GMM-vs-multivariate-t BIC gap at the best k (t wins => positive)
-  (3) only a two-way split is stable -> cross-seed ARI at k=2 (stable) vs k=4 (unstable)
-
-Conclusions are robust if, after dropping, dimensionality stays high, t keeps beating GMM, and the
-k=2/k=4 ARI split persists. NOT a 4-mode reproduction test.
-"""
 import sys, os, json
 from pathlib import Path
 import numpy as np
@@ -24,15 +12,11 @@ CC = str(Path(os.environ.get(
     REPO_ROOT / "pipeline" / "4_phenotype_space",
 )))
 sys.path.insert(0, CC)
-import _common_controlled as cc
-
 BASE = Path(__file__).resolve().parent
-PRF = BASE / ".." / "2_1_sentence_level_prf_spearman" / "sentence_level_validation_results.json"
-REPORT_JSON = Path(os.environ.get(
-    "REPORT_LEVEL_VALIDATION_JSON",
-    REPO_ROOT / "validation" / "silver_labels" / "report_level" / "results" /
-    "results_full_vs_gold_llama_full489_26gold.json",
-))
+sys.path.insert(0, str(BASE))
+import _common_controlled as cc
+import _sensitivity_common as sc
+
 SEED = cc.SEED
 N_SEED = 30
 
@@ -69,8 +53,7 @@ def main():
     d = cc.load()
     P, dom, design = d["P"], list(d["dom"]), np.column_stack(
         [np.ones(len(d["P"])), (d["rtype"] == "P").astype(float)])
-    f1 = {r["domain"]: r["f1"] for r in json.load(open(PRF))["per_domain"]}
-    rho = {d: v["spearman"] for d, v in json.load(open(REPORT_JSON))["per_domain"].items()}
+    f1, rho = sc.fidelity()
 
     drops = {
         "baseline_full19": set(),

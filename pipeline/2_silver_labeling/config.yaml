@@ -17,43 +17,45 @@ llm:
   self_consistency_n: 5
   seed: 42
 
+# The reports are in Korean and the model was prompted in Korean. This is the
+# prompt as it was run. An English translation is given in Supplementary Note S1.
 prompt:
   system: |
-    You are a clinical psychologist with expertise in autism spectrum disorder reports.
-    Read the given sentence and assign all applicable phenotype domains.
+    당신은 자폐 스펙트럼 장애(ASD) 임상 보고서를 분석하는 전문 심리학자입니다.
+    주어진 문장을 읽고, 해당 문장에 해당하는 도메인을 **모두** 선택하세요 (multi-label).
 
-    Rules:
-    1. If multiple domains apply, return all relevant domains and put the primary one first.
-    2. Assign a confidence score from 0.0 to 1.0 for each domain.
-    3. Write a brief rationale in English for each selected domain.
-    4. If no domain clearly applies, return only "other_general".
-    5. Return at most 3 domains.
+    규칙:
+    1. 한 문장에 여러 도메인이 해당하면 모두 선택하세요. 가장 핵심적인 도메인을 맨 앞에 두세요.
+    2. 각 도메인에 대해 confidence(0.0~1.0)를 부여하세요.
+    3. 각 도메인마다 짧은 rationale(한국어, 1~2문장)을 작성하세요.
+    4. 어떤 도메인에도 명확히 해당하지 않으면 "other_general" 하나만 선택하세요.
+    5. 해당하는 도메인이 많더라도 가장 핵심적인 것만 **최대 3개까지** 선택하세요. 3개를 초과하지 말고, 우선순위가 높은 순서대로 나열하세요.
 
-    Respond only with valid JSON:
+    반드시 아래 JSON 형식으로만 응답하세요 (추가 텍스트 금지):
     {
       "labels": [
         {
-          "domain_id": "<domain ID>",
-          "confidence": <0.0-1.0>,
-          "rationale": "<brief rationale>"
+          "domain_id": "<도메인 ID>",
+          "confidence": <0.0~1.0>,
+          "rationale": "<근거>"
         }
       ]
     }
 
   user_template: |
-    [Domain list]
+    [도메인 목록]
     {domain_list}
 
-    [Sentence]
+    [문장]
     {sentence}
 
-    Return at most 3 domain labels as valid JSON:
+    위 문장에 해당하는 도메인을 핵심 순서대로 **최대 3개까지** 아래 JSON 형식으로 응답하세요 (가장 핵심적인 것을 맨 앞에):
     {{
       "labels": [
         {{
-          "domain_id": "<domain ID>",
-          "confidence": <0.0-1.0>,
-          "rationale": "<brief rationale>"
+          "domain_id": "<도메인 ID>",
+          "confidence": <0.0~1.0>,
+          "rationale": "<근거>"
         }}
       ]
     }}
@@ -64,6 +66,8 @@ threshold:
   max_labels: 3
 
 segmentation:
+  # tokenizer_aligned reproduces the encoder's segmentation, so sentence indices
+  # match the rows of the attention matrix. It is the only supported method.
   method: tokenizer_aligned
   min_length: 30
   max_length: 500
@@ -73,7 +77,7 @@ paths:
   output_dir: data/silver_label
   log_dir: logs
   gold_labels: data/gold_label/gold_labels_26reports.jsonl
-  silver_labels_file: silver_labels_26reports.jsonl
+  silver_labels_file: silver_labels_489reports.jsonl
 
 runtime:
   batch_size: 5

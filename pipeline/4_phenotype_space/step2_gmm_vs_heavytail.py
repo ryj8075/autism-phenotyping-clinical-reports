@@ -29,7 +29,7 @@ res = {"n_asd": int(len(lead)), "pc13_var": round(float(evr[:3].sum()), 4),
        "per_k": perk, "bic_optimal_k": int(bk),
        "note": ("Multivariate t beats every GMM k (dBIC_vs_t > 0); BIC rises monotonically "
                 "from its minimum at the smallest k, so no Gaussian mixture is favored over the "
-                "unimodal (near-Gaussian, heavy-tailed) model. k is an interpretive descriptor, "
+                "unimodal near-Gaussian model. k is an interpretive descriptor, "
                 "not a BIC-selected subtype count.")}
 json.dump(res, open(HERE + "/step2_gmm_vs_heavytail_results.json", "w"), ensure_ascii=False, indent=2)
 print(f"-> multivariate-t nu={nu:.1f}, BIC={tbic:.1f}; BIC-optimal GMM k={bk}")

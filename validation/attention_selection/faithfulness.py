@@ -1,30 +1,5 @@
 #!/usr/bin/env python3
-"""
-faithfulness.py — Does the top-K attention subset reconstruct a report's
-phenotype better than (or as well as) a random K-sentence subset?
 
-For each report we build three SILVER domain vectors:
-  (a) top-K attention sentences
-  (b) random-K sentences (averaged over N=200 draws, fixed seed)
-  (c) FULL = all sentences of the report
-
-References:
-  PRIMARY   = expert GOLD report-level vector (26 gold reports).
-              metric = cosine + Spearman of each silver vector vs gold vector.
-  SECONDARY = the report's own FULL silver vector (all 489 reports).
-              metric = cosine(top-K, full) vs cosine(random-K, full).
-
-K primary = 10; sweep K in {5,10,15,20}.
-Stats: paired Wilcoxon signed-rank (top-K vs random-K) per K, medians, effect size.
-
-Outputs (outputs/):
-  test1_results.json          full numeric results
-  test1_per_report.csv        per-report cosine/spearman by source (K=10)
-  test1_sweep.csv             summary by K
-Figures (figures/):
-  test1_gold_reconstruction   cosine vs gold, top-K/random/full, by K
-  test1_full_reconstruction   cosine vs full silver, top-K vs random, by K
-"""
 from __future__ import annotations
 
 import json
@@ -36,6 +11,8 @@ from scipy.spatial.distance import cosine as cos_dist
 from scipy.stats import spearmanr, wilcoxon
 
 import _common as C
+
+__version__ = "1.1"
 
 def cosine_sim(a: Optional[np.ndarray], b: Optional[np.ndarray]) -> float:
     if a is None or b is None:
@@ -112,7 +89,7 @@ def main() -> None:
     per_report_k10: List[Dict] = []
 
     for K in C.K_SWEEP:
-        # ---- GOLD reference (26 reports) ----
+        # GOLD reference (26 reports)
         g_cos_top, g_cos_rand, g_cos_full = [], [], []
         g_sp_top, g_sp_rand, g_sp_full = [], [], []
 
@@ -162,12 +139,15 @@ def main() -> None:
             a2, b2 = a[m], b[m]
             diffs = a2 - b2
             if np.all(diffs == 0) or diffs.size < 1:
-                return {"wilcoxon_p": np.nan, "effect_rank_biserial": 0.0, "n": int(diffs.size)}
+                return {"wilcoxon_W": np.nan, "wilcoxon_p": np.nan,
+                        "effect_rank_biserial": 0.0, "n": int(diffs.size)}
             try:
-                stat, p = wilcoxon(a2, b2)
+                stat, p = wilcoxon(a2, b2, alternative="two-sided",
+                                   zero_method="wilcox", method="auto")
             except ValueError:
-                p = np.nan
-            return {"wilcoxon_p": float(p), "effect_rank_biserial": rank_biserial(diffs), "n": int(diffs.size)}
+                stat, p = np.nan, np.nan
+            return {"wilcoxon_W": float(stat), "wilcoxon_p": float(p),
+                    "effect_rank_biserial": rank_biserial(diffs), "n": int(diffs.size)}
 
         gold_block = {
             "cosine": {
@@ -192,7 +172,7 @@ def main() -> None:
         }
         results["gold_reference"][str(K)] = gold_block
 
-        # ---- FULL silver reference (all 489) ----
+        # FULL silver reference (all 489)
         f_cos_top, f_cos_rand = [], []
         f_sp_top, f_sp_rand = [], []
         for rid in silver_report_ids:
@@ -240,21 +220,22 @@ def main() -> None:
             "gold_cos_topK": gold_block["cosine"]["topK_median"],
             "gold_cos_randK": gold_block["cosine"]["randK_median"],
             "gold_cos_full": gold_block["cosine"]["full_median"],
+            "gold_cos_W_top_vs_rand": gold_block["cosine"]["topK_vs_randK"]["wilcoxon_W"],
             "gold_cos_p_top_vs_rand": gold_block["cosine"]["topK_vs_randK"]["wilcoxon_p"],
             "gold_sp_topK": gold_block["spearman"]["topK_median"],
             "gold_sp_randK": gold_block["spearman"]["randK_median"],
             "full_cos_topK": full_block["cosine"]["topK_median"],
             "full_cos_randK": full_block["cosine"]["randK_median"],
+            "full_cos_W_top_vs_rand": full_block["cosine"]["topK_vs_randK"]["wilcoxon_W"],
             "full_cos_p_top_vs_rand": full_block["cosine"]["topK_vs_randK"]["wilcoxon_p"],
         })
 
-    # ---- Save numeric ----
-    with open(C.OUTPUTS_DIR / "test1_results.json", "w", encoding="utf-8") as f:
+    # Save numeric
+    with open(C.OUTPUTS_DIR / "faithfulness_results.json", "w", encoding="utf-8") as f:
         json.dump(results, f, ensure_ascii=False, indent=2)
-    pd.DataFrame(per_report_k10).to_csv(C.OUTPUTS_DIR / "test1_per_report.csv", index=False)
-    pd.DataFrame(sweep_rows).to_csv(C.OUTPUTS_DIR / "test1_sweep.csv", index=False)
+    pd.DataFrame(per_report_k10).to_csv(C.OUTPUTS_DIR / "faithfulness_per_report.csv", index=False)
+    pd.DataFrame(sweep_rows).to_csv(C.OUTPUTS_DIR / "faithfulness_sweep.csv", index=False)
 
-    # ---- Figures ----
     _figures(results)
     _print_summary(results)
 
@@ -264,7 +245,7 @@ def _figures(results: Dict) -> None:
 
     Ks = C.K_SWEEP
 
-    # Fig 1: cosine vs GOLD, top-K / random-K / full
+    # cosine vs GOLD, top-K / random-K / full
     top = [results["gold_reference"][str(k)]["cosine"]["topK_median"] for k in Ks]
     rnd = [results["gold_reference"][str(k)]["cosine"]["randK_median"] for k in Ks]
     full = [results["gold_reference"][str(k)]["cosine"]["full_median"] for k in Ks]
@@ -281,10 +262,10 @@ def _figures(results: Dict) -> None:
     ax.set_ylabel("Cosine similarity to expert gold vector (median)")
     ax.set_ylim(0, 1)
     ax.legend(frameon=False, fontsize=8)
-    C.save_fig(fig, "test1_gold_reconstruction")
+    C.save_fig(fig, "faithfulness_gold_reconstruction")
     plt.close(fig)
 
-    # Fig 2: cosine vs FULL silver, top-K vs random-K
+    # cosine vs FULL silver, top-K vs random-K
     top = [results["full_reference"][str(k)]["cosine"]["topK_median"] for k in Ks]
     rnd = [results["full_reference"][str(k)]["cosine"]["randK_median"] for k in Ks]
     fig, ax = plt.subplots(figsize=(5.2, 4.0))
@@ -298,8 +279,9 @@ def _figures(results: Dict) -> None:
     ax.set_ylabel("Cosine similarity to full-report silver vector (median)")
     ax.set_ylim(0, 1)
     ax.legend(frameon=False, fontsize=8)
-    C.save_fig(fig, "test1_full_reconstruction")
+    C.save_fig(fig, "faithfulness_full_reconstruction")
     plt.close(fig)
+
 
 def _print_summary(results: Dict) -> None:
     k = str(C.TOP_K_PRIMARY)
@@ -318,6 +300,7 @@ def _print_summary(results: Dict) -> None:
           % (f["cosine"]["topK_median"], f["cosine"]["randK_median"],
              f["cosine"]["topK_vs_randK"]["wilcoxon_p"]))
     print("=" * 70)
+
 
 if __name__ == "__main__":
     main()

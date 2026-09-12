@@ -1,34 +1,5 @@
 #!/usr/bin/env python3
-"""
-_common.py — Shared loaders, the domain-vector builder, and plotting helpers
-for the attention/phenotype faithfulness validation sub-pipeline (1.7).
 
-This module is read-only with respect to the rest of the repository: it only
-LOADS existing artifacts (silver/gold labels, attention matrices, the domain
-list). Nothing here writes into other pipeline folders.
-
-Centralised paths live at the top of this file (PATHS). Every per-test script
-imports from here so that path/logic changes happen in exactly one place.
-
-Silver source: this sub-pipeline loads the CANONICAL silver
-(silver_labels_26reports.jsonl, the full multi-label variant: other_general/C2 retained) -- the SAME file the production domain vectors
-(3.2 outputs) are built from. The build_vector LOGIC below also matches production,
-so these numbers validate the selector on the exact canonical phenotype space.
-
-Key reused logic (computation kept faithful to production):
-  - Per-sentence attention score = column_sum of the attention matrix,
-    restricted to valid sentences. This matches
-    pipeline/3_multidomain_vectors/top_10_sentences/extract_all_high_attention_sentences.py
-    (compute_attention_importance, method="column_sum"), and because invalid
-    columns sum to exactly 0 the production full-argsort naturally lands on
-    valid sentences. We additionally mask invalid positions for robustness.
-  - build_vector(): each sentence distributes mass 1.0 EQUALLY across its
-    (active) silver labels, masses are summed over the sentence set, then the
-    vector is L1-normalised to proportions (sum=1). This mirrors
-    pipeline/3_multidomain_vectors/domain_frequency_vector/build_domain_vectors.py
-    (allocation="equal", proportion vector). Sentences with no usable label are
-    skipped.
-"""
 from __future__ import annotations
 
 import json
@@ -38,10 +9,7 @@ from typing import Any, Dict, List, Optional, Tuple
 
 import numpy as np
 
-# ===========================================================================
-# Centralised paths (the ONLY place paths are defined)
-# ===========================================================================
-
+# Paths
 HERE = Path(__file__).resolve().parent
 OUTPUTS_DIR = HERE / "outputs"
 FIGURES_DIR = HERE / "figures"
@@ -50,18 +18,16 @@ REPO_ROOT = HERE.parents[1]
 REPO_PIPELINE = REPO_ROOT / "pipeline"
 
 PATHS: Dict[str, Path] = {
-    # Silver labels: CANONICAL silver (silver_labels_26reports.jsonl = full multi-label variant,
-    # other_general/C2 retained) -- the SAME file
-    # the production domain vectors (3.2 outputs) are built from.
+    # Silver labels: sentence-level, 489 reports, the production domain vectors are built from.
     "silver_labels": REPO_PIPELINE
-    / "2_silver_labeling/data/silver_label/silver_labels_26reports.jsonl",
-    # Expert GOLD labels: sentence-level, 26 reports
+    / "2_silver_labeling/data/silver_label/silver_labels_489reports.jsonl",
+    # Expert Gold labels: sentence-level, 26 reports
     "gold_labels": REPO_PIPELINE
     / "2_silver_labeling/data/gold_label/gold_labels_26reports.jsonl",
     # Attention intermediates (489 reports)
     "intermediates": REPO_PIPELINE
     / "1_classifier/intermediates/489samples_epoch40_153stc_128tkn_epoch40_patience10_no_headings",
-    # Domain list / definitions (19 domains, data-driven)
+    # Domain list / definitions (19 domains)
     "domain_meta": REPO_PIPELINE
     / "3_multidomain_vectors/domain_frequency_vector/outputs/domain_vectors_meta_latest.json",
     # Diagnosis metadata fallback
@@ -74,21 +40,8 @@ K_SWEEP = [5, 10, 15, 20]
 N_RANDOM_DRAWS = 200
 RANDOM_SEED = 42
 
-# ===========================================================================
-# Domain list (data-driven; NOT hardcoded)
-# ===========================================================================
-
+# Domain list
 def load_domains() -> Tuple[List[str], List[str], Dict[str, str], Dict[str, str]]:
-    """
-    Load the 19-domain order and code mapping from the production meta JSON.
-
-    Returns
-    -------
-    domain_order : list[str]      domain_id in canonical column order
-    codes        : list[str]      domain_code aligned with domain_order (A1..C3)
-    id_to_code   : dict
-    id_to_group  : dict           domain_id -> "A" | "B" | "C"
-    """
     with open(PATHS["domain_meta"], encoding="utf-8") as f:
         meta = json.load(f)
 
@@ -97,21 +50,11 @@ def load_domains() -> Tuple[List[str], List[str], Dict[str, str], Dict[str, str]
 
     codes = [defs[d]["code"] for d in domain_order]
     id_to_code = {d: defs[d]["code"] for d in domain_order}
-    id_to_group = {d: defs[d]["code"][0] for d in domain_order}  # first char A/B/C
+    id_to_group = {d: defs[d]["code"][:2] for d in domain_order}  # group prefix CO/AS/RE
     return domain_order, codes, id_to_code, id_to_group
 
-# ===========================================================================
 # Label loaders
-# ===========================================================================
-
 def _normalise_label_items(raw: Any) -> List[str]:
-    """
-    Reduce a 'labels' field to a list of domain_id strings, de-duplicated,
-    order preserved. Handles BOTH schemas:
-      - silver: [{"domain_id": ..., "confidence": ...}, ...]
-      - gold:   ["other_general", "social_emotional_reciprocity", ...]
-      - legacy single 'label' dict is handled by the caller.
-    """
     if not isinstance(raw, list):
         return []
     out: List[str] = []
@@ -129,12 +72,6 @@ def _normalise_label_items(raw: Any) -> List[str]:
     return out
 
 def load_sentence_labels(jsonl_path: Path) -> Dict[Tuple[str, int], List[str]]:
-    """
-    Load a sentence-level label file (silver OR gold) into:
-        (report_id, sentence_idx) -> [domain_id, ...]
-
-    Sentences with an empty/absent label list map to [] (caller decides to skip).
-    """
     out: Dict[Tuple[str, int], List[str]] = {}
     with open(jsonl_path, encoding="utf-8") as f:
         for line in f:
@@ -161,29 +98,12 @@ def report_to_sentence_indices(
         by_report[rid].sort()
     return by_report
 
-# ===========================================================================
 # Domain-vector builder
-# ===========================================================================
-
 def build_vector(
     sentences_labels: List[List[str]],
     domain_order: List[str],
 ) -> Optional[np.ndarray]:
-    """
-    Build a |domain_order|-dim L1-normalised domain frequency vector from a SET
-    of sentences (each given as a list of domain_id labels).
 
-    Mass rule (allocation="equal"): each sentence carries mass 1.0 split equally
-    across its labels that are in domain_order; masses are summed per domain;
-    the result is L1-normalised to proportions (sum=1).
-
-    Sentences with no usable label (empty, or none in domain_order) are skipped.
-
-    Returns
-    -------
-    np.ndarray (len domain_order,) summing to 1, OR None if no sentence
-    contributed any mass (degenerate report -> caller decides).
-    """
     idx = {d: i for i, d in enumerate(domain_order)}
     mass = np.zeros(len(domain_order), dtype=float)
 
@@ -200,19 +120,8 @@ def build_vector(
         return None
     return mass / total
 
-# ===========================================================================
-# Attention loader (faithful to extract_all_high_attention_sentences.py)
-# ===========================================================================
-
+# Attention loader
 class AttentionStore:
-    """
-    Holds the per-report attention column-sum importance and valid masks.
-
-    Per-sentence attention score = attention_matrix.sum(axis=0) (column_sum),
-    restricted to valid sentences (invalid columns are 0 anyway). This is the
-    exact production "high_attention" definition.
-    """
-
     def __init__(self) -> None:
         d = PATHS["intermediates"]
         self.attn = np.load(d / "attention_matrices_np.npy")          # (N,S,S)
@@ -247,10 +156,7 @@ class AttentionStore:
     def diagnosis(self, report_id: str) -> int:
         return int(self.labels[self.rid_to_row[report_id]])
 
-# ===========================================================================
-# Matplotlib style (project rule: no titles, Arial, light/no grid, png+pdf)
-# ===========================================================================
-
+# Matplotlib style
 def apply_style() -> None:
     import matplotlib
 
@@ -271,11 +177,11 @@ def apply_style() -> None:
         }
     )
 
-# Color scheme for domain groups (ASD-core A / general B / formal C)
+# Color scheme for domain groups (CO Core ASD / AS associated / RE report elements)
 GROUP_COLORS = {
-    "A": "#C0392B",  # ASD-core
-    "B": "#2E86C1",  # general psychiatric
-    "C": "#7F8C8D",  # formal / other
+    "CO": "#C0392B",  # Core ASD domains
+    "AS": "#2E86C1",  # Associated and co-occurring features
+    "RE": "#7F8C8D",  # Report elements and other
 }
 
 def save_fig(fig, name: str) -> None:

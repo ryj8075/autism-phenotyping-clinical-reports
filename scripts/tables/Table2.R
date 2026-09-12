@@ -1,24 +1,32 @@
 #!/usr/bin/env Rscript
-# Table 2 — dataset / cohort summary (489 reports, A/P x autism/non-autism + unique children)
+# Table 2 — sentence-selector (KLUE-RoBERTa) 5-fold CV performance, three independent models.
+# All (n=489), A-type / autism-diagnostic (n=233), P-type / psych-assessment (n=256).
 rm(list = ls())
 source("_common.R")
-stopifnot(file.exists(META))
+files <- c(All = "489samples", A = "asd233samples", P = "psy256samples")
+suffix <- "_epoch40_153stc_128tkn_epoch40_patience10_no_headings.txt"
+`%||%` <- function(a, b) if (is.null(a) || length(a) == 0) b else a
 
-m <- read.csv(META, stringsAsFactors = FALSE)
-m$type  <- ifelse(grepl("-A[0-9]+$", m$code), "A",
-            ifelse(grepl("-P[0-9]+$", m$code), "P", NA))
-m$dx    <- ifelse(m$final_diag == 1, "Autism", "Non-autism")
-m$child <- sub("^(KHU-[A-Z]-[0-9]+).*$", "\\1", m$code)
+# parse overall "METRIC: mean (+/- sd)"
+parse_overall <- function(tag) {
+  p <- file.path(RES, paste0(files[[tag]], suffix)); stopifnot(file.exists(p))
+  L <- readLines(p, warn = FALSE)
+  overall <- list()
+  for (l in L) {
+    mm <- regmatches(l, regexec("^([A-Za-z0-9_ ]+?):\\s+([0-9.]+)\\s*\\(\\+/-\\s*([0-9.]+)\\)", l))[[1]]
+    if (length(mm) == 4) overall[[trimws(mm[2])]] <- sprintf("%.3f (%.3f)", as.numeric(mm[3]), as.numeric(mm[4]))
+  }
+  overall
+}
+P <- lapply(names(files), parse_overall); names(P) <- names(files)
 
-cnt <- function(dx, ty) sum(m$dx == dx & m$type == ty)
-report_tot <- function(ty) sum(m$type == ty)
-uchild <- function(ty) length(unique(m$child[m$type == ty]))
-
-t1 <- data.frame(
-  Group = c("Autism", "Non-autism", "Report total", "Unique individuals"),
-  `A-type` = c(cnt("Autism", "A"), cnt("Non-autism", "A"), report_tot("A"), uchild("A")),
-  `P-type` = c(cnt("Autism", "P"), cnt("Non-autism", "P"), report_tot("P"), uchild("P")),
-  Total = c(sum(m$dx == "Autism"), sum(m$dx == "Non-autism"), nrow(m), length(unique(m$child))),
-  check.names = FALSE,
-  stringsAsFactors = FALSE)
-write_table(t1, "Table2")
+# overall metrics: metric x {All, A, P}
+metrics <- unique(unlist(lapply(P, names)))
+metrics <- setdiff(metrics, "Loss")   # drop loss row
+ta <- data.frame(Metric = metrics,
+                 All = vapply(metrics, function(m) P$All[[m]] %||% NA_character_, character(1)),
+                 `A-type` = vapply(metrics, function(m) P$A[[m]]   %||% NA_character_, character(1)),
+                 `P-type` = vapply(metrics, function(m) P$P[[m]]   %||% NA_character_, character(1)),
+                 check.names = FALSE,
+                 stringsAsFactors = FALSE, row.names = NULL)
+write_table(ta, "Table2")

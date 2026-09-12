@@ -1,20 +1,12 @@
 # -*- coding: utf-8 -*-
-"""step2: is H3 (residual heavy-tail idiosyncrasy) robust to dropping / down-weighting low-fidelity
-domains?
 
-Canonical Figure-5 claim: the phenotype is non-Gaussian with the heavy tail concentrated in the
-RESIDUAL subspace -- the leading subspace (PC1-3) is mildly platykurtic (Mardia z ~ -3) while the
-residual subspace (PC4+) is sharply leptokurtic. For each of the 6 fidelity variants we recompute
-Mardia multivariate kurtosis on (a) the full residual ILR space, (b) the leading 3-PC subspace,
-(c) the residual PC4+ subspace, and flag whether the platy(lead)/lepto(residual) pattern survives.
-"""
 import sys, json
 from pathlib import Path
 import numpy as np
 
 BASE = Path(__file__).resolve().parent
 sys.path.insert(0, str(BASE.parent))
-import _sensitivity_common as sc               # noqa: E402
+import _sensitivity_common as sc
 cc = sc.cc
 
 def analyze(RES):

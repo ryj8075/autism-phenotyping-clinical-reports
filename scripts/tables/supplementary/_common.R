@@ -14,7 +14,6 @@ suppressMessages(library(jsonlite))
 SCRIPT_DIR <- .script_dir()
 REPO_ROOT <- normalizePath(file.path(SCRIPT_DIR, "..", "..", ".."), mustWork = FALSE)
 
-ROOT <- Sys.getenv("REPORT_LLM_ROOT", REPO_ROOT)
 TS_DIR <- Sys.getenv("REPORT_LLM_TABLE_SOURCE_DIR", file.path(REPO_ROOT, "table_source"))
 OUT <- Sys.getenv("REPORT_LLM_SUPPLEMENTARY_TABLE_OUT_DIR", file.path(REPO_ROOT, "tables", "supplementary"))
 dir.create(OUT, recursive = TRUE, showWarnings = FALSE)
@@ -27,7 +26,7 @@ P_SEED  <- file.path(TS_DIR, "bootstrap_permutation_results.json")
 P_STEP2 <- file.path(TS_DIR, "step2_gmm_vs_heavytail_results.json")
 P_STEP6 <- file.path(TS_DIR, "step6_seed_stability_results.json")
 P_PROF  <- file.path(TS_DIR, "controlled_individual_profiles.tsv")
-P_SIL   <- file.path(TS_DIR, "silver_labels_26reports.jsonl")
+P_SIL   <- file.path(TS_DIR, "silver_labels_489reports.jsonl")
 P_GOLD  <- file.path(TS_DIR, "gold_labels_26reports.jsonl")
 P_SENT  <- file.path(TS_DIR, "sentence_level_validation_results.json")
 
@@ -35,11 +34,11 @@ P_SENT  <- file.path(TS_DIR, "sentence_level_validation_results.json")
 meta    <- fromJSON(file.path(TS_DIR, "domain_vectors_meta_latest.json"))
 doms    <- meta$domain_columns
 ndom    <- length(doms)
-codes   <- c(paste0("A", 1:7), paste0("B", 1:9), paste0("C", seq_len(ndom - 16)))
+codes   <- c(paste0("CO", 1:7), paste0("AS", 1:9), paste0("RE", seq_len(ndom - 16)))
 stopifnot(length(codes) == ndom)
 code_of <- setNames(codes, doms)
 
-# Reader-facing domain names. Table1_phenotype_ontology.xlsx is the source of truth,
+# Reader-facing domain names. Table3_phenotype_ontology.xlsx is the source of truth,
 # so any table a reviewer reads shows these strings instead of the pipeline column ids.
 display_of <- c(
   social_emotional_reciprocity = "Social-emotional reciprocity",
@@ -63,9 +62,9 @@ display_of <- c(
   recommendations              = "Recommendations")
 stopifnot(all(doms %in% names(display_of)))
 
-group_of <- c(A = "Core ASD domains",
-              B = "Associated and co-occurring features",
-              C = "Report elements and other")
+group_of <- c(CO = "Core ASD domains",
+              AS = "Associated and co-occurring features",
+              RE = "Report elements and other")
 
 read_jsonl <- function(p) lapply(readLines(p, warn = FALSE),
   function(l) if (nzchar(trimws(l))) fromJSON(l, simplifyVector = FALSE) else NULL)

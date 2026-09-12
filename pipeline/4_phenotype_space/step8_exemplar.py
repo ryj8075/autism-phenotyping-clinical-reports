@@ -1,15 +1,13 @@
 # -*- coding: utf-8 -*-
-"""step10 (controlled): exemplar candidates per residual mode, from the controlled
-step9 profiles. (For the journal Fig 6e a mode-free exemplar is chosen separately;
-this keeps the per-mode candidate listing for reference.)"""
+
 import os, json
 import numpy as np, pandas as pd
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-STEP9_TSV = os.path.join(os.path.dirname(HERE), "step7_normative",
-                         "controlled_individual_profiles.tsv")
+# written by step7_normative.py into this same folder; run step7 first
+PROFILES_TSV = os.path.join(HERE, "controlled_individual_profiles.tsv")
 
-prof = pd.read_csv(STEP9_TSV, sep="\t")
+prof = pd.read_csv(PROFILES_TSV, sep="\t")
 zcols = [c for c in prof.columns if c.startswith("z_")]
 dom = [c[2:] for c in zcols]
 lab = prof["gmm4_mode"].values
@@ -34,9 +32,9 @@ for k in np.unique(lab):
 
 json.dump({"exemplars_per_residual_mode": exemplars,
            "note": "modes exploratory; journal Fig 6e uses a mode-free exemplar "
-                   "(top-decile Mahalanobis x reliable ASD-core peak)"},
+                   "(top-decile Mahalanobis x reliable Core ASD peak)"},
           open(HERE + "/step8_exemplar_results.json", "w"), ensure_ascii=False, indent=2)
-print("[step10] exemplar candidates per residual mode:")
+print("[step8] exemplar candidates per residual mode:")
 for k, v in exemplars.items():
     t = v["top"][0] if v["top"] else None
     print(f"  {k} signal={v['signal_domain']}: " +

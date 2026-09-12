@@ -15,7 +15,7 @@ from sklearn.mixture import GaussianMixture
 from sklearn.metrics import adjusted_rand_score
 
 _THIS_DIR = Path(__file__).resolve().parent
-_COMMON_DIR = _THIS_DIR.parent / "_common"
+_COMMON_DIR = _THIS_DIR / "_common"
 if str(_COMMON_DIR) not in sys.path:
     sys.path.insert(0, str(_COMMON_DIR))
 
@@ -39,12 +39,8 @@ from idiosyncrasy_checks import run_all_checks  # noqa: E402
 
 N_SEED_CROSS = 30
 
-# ---------------------------------------------------------------------------
 # Helpers
-# ---------------------------------------------------------------------------
-
 def load_tokenized_dir(tokenized_dir: Path):
-
     mask = torch.load(tokenized_dir / "attention_mask_tensor",
                       map_location="cpu", weights_only=False)
     rids = torch.load(tokenized_dir / "report_id_array",
@@ -59,7 +55,6 @@ def load_tokenized_dir(tokenized_dir: Path):
     return mask, np.asarray(rids), lab
 
 def report_ptype(report_id: str) -> str:
-
     r = str(report_id)
     return "A" if "-A" in r else ("P" if "-P" in r else "?")
 
@@ -68,7 +63,6 @@ def _gmm(k: int, seed: int, n_init: int) -> GaussianMixture:
                            max_iter=500, random_state=seed)
 
 def heavytail_ablation_convention(RES: np.ndarray) -> Dict:
-
     _, scores, _lead, evr = cc.pca_scores(RES)
     full = cc.mardia_z(RES)
     lead_m = cc.mardia_z(scores[:, :3])
@@ -87,7 +81,6 @@ def heavytail_ablation_convention(RES: np.ndarray) -> Dict:
     )
 
 def cross_seed_ari(lead: np.ndarray, k: int, n_seed: int = N_SEED_CROSS) -> float:
-
     labs = [GaussianMixture(k, covariance_type="full", n_init=1, random_state=s,
                             max_iter=500).fit(lead).predict(lead) for s in range(n_seed)]
     a = [adjusted_rand_score(labs[i], labs[j])
@@ -125,7 +118,6 @@ def summarize_k(k: int, check: Dict, stats: Dict, ht: Dict, ari2: float,
 
     eig = check["B_eigenvalue"]
     gmm = check["C_gmm_vs_t"]
-    mgfs = check["E_mgfs"]
     out = {
         "K": int(k),
         "match_rate": float(stats.get("match_rate", np.nan)),
@@ -154,15 +146,10 @@ def summarize_k(k: int, check: Dict, stats: Dict, ht: Dict, ari2: float,
         "gmm_vs_t_winner": gmm["winner"],
         "best_gmm_k": int(gmm["best_gmm_k"]),
         "t_nu": float(gmm["t_nu"]),
-        "mgfs_mean": float(mgfs["mgfs_mean"]),
-        "mgfs_std": float(mgfs["mgfs_std"]),
     }
     return out
 
-# ---------------------------------------------------------------------------
 # Main
-# ---------------------------------------------------------------------------
-
 def main():
     parser = argparse.ArgumentParser(
         description="Track 1: Top-K sensitivity (ablation-convention heavy tail)")

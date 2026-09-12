@@ -8,10 +8,10 @@
 rm(list = ls())
 source("_common.R")
 
-# raw per-step controlled-analysis outputs (no reassembled controlled_mode_analysis.json)
+# per-step outputs of the type-residual phenotype-space analysis
 STEP2_JSON <- file.path(FS_DIR, "step2_gmm_vs_heavytail_results.json")   # (a) GMM vs t
 STEP6_JSON <- file.path(FS_DIR, "step6_seed_stability_results.json")     # (b) cross-seed ARI
-STEP4_JSON <- file.path(FS_DIR, "step4_residual_tail_results.json")      # (e) tail decomposition
+STEP4_JSON <- file.path(FS_DIR, "step4_residual_tail_results.json")      # (d) tail decomposition
 BOOT_JSON  <- file.path(FS_DIR, "bootstrap_permutation_results.json")    # (b) bootstrap + null
 
 s2 <- fromJSON(STEP2_JSON)

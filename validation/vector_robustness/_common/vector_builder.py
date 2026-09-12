@@ -7,10 +7,7 @@ from typing import Dict, List, Optional, Sequence, Tuple
 import numpy as np
 import yaml
 
-# ---------------------------------------------------------------------------
 # 1. Silver labels
-# ---------------------------------------------------------------------------
-
 def load_silver_labels(
     silver_path: str | Path,
 ) -> Dict[Tuple[str, int], List[Tuple[str, float]]]:
@@ -53,10 +50,7 @@ def load_silver_labels(
             labels[key] = [(d, seen[d]) for d in order] if order else [("other_general", 0.0)]
     return labels
 
-# ---------------------------------------------------------------------------
 # 2. Domain list
-# ---------------------------------------------------------------------------
-
 def load_active_domains(domains_yaml: str | Path,
                         pilot_mode: Optional[bool] = None) -> List[str]:
 
@@ -78,10 +72,7 @@ def load_active_domains(domains_yaml: str | Path,
         active = all_domains
     return [d["id"] for d in active]
 
-# ---------------------------------------------------------------------------
 # 3. Top-K selection from attention matrix
-# ---------------------------------------------------------------------------
-
 def extract_top_k_indices(
     attention_matrices: np.ndarray,  # (N, S, S)
     top_k: int,
@@ -105,9 +96,6 @@ def extract_top_k_indices(
     top_idx = np.argsort(-importance, axis=1)[:, :top_k]
     return top_idx
 
-# ---------------------------------------------------------------------------
-
-# ---------------------------------------------------------------------------
 
 def weighted_sample_indices(
     attention_matrices: np.ndarray,  # (N, S, S)
@@ -163,10 +151,7 @@ def weighted_sample_indices(
         out[i, :] = chosen
     return out
 
-# ---------------------------------------------------------------------------
 # 5. Domain vector construction
-# ---------------------------------------------------------------------------
-
 def build_proportion_matrix(
     indices: np.ndarray,  # (N, K)
     report_id_array: Sequence[str],
@@ -232,11 +217,7 @@ def build_proportion_matrix(
     }
     return proportion, stats
 
-# ---------------------------------------------------------------------------
 # 6. Valid sentence mask
-# ---------------------------------------------------------------------------
-
 def compute_valid_sentence_mask(attn_mask_tensor: np.ndarray) -> np.ndarray:
-
     valid_token_count = attn_mask_tensor.sum(axis=-1)
     return valid_token_count > 2

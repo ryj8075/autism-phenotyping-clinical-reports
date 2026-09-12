@@ -45,11 +45,15 @@ def main():
         rows[k] = dict(bic=float(g.bic(Xp)), silhouette=float(silhouette_score(Xp, g.predict(Xp))),
                        seed_ari=float(np.mean(aris)))
         print(f"  k={k} BIC={rows[k]['bic']:8.1f} sil={rows[k]['silhouette']:.3f} seedARI={rows[k]['seed_ari']:.3f}")
-    out = dict(timestamp=ts, cohort="A-type (autism diagnostic) ASD reports only, n=192, sklearn-centered PCA",
+    out = dict(timestamp=ts,
+               cohort=(f"A-type (autism diagnostic) ASD reports only, n={len(Xp)}, "
+                       "sklearn-centered PCA"),
                n=int(len(Xp)), per_k=rows,
                note=("Report-type confounding is removed by design by excluding P-type reports. "
-                     "Only k=2 is stable (seed ARI about 1.0); k>=3 is unstable (about 0.5). "
-                     "This matches the type-residual controlled_mode_analysis conclusion."))
+                     "Read the per_k seed_ari values above: only the two-way split reproduces "
+                     "across reseedings, and stability falls away for k>=3. "
+                     "This matches the type-residual conclusion from step6_seed_stability.py "
+                     "and step6_bootstrap_permutation.py."))
     json.dump(out, open(BASE/f"atype_only_mode_stability.json", "w"), indent=2, ensure_ascii=False)
     print(f"[saved] atype_only_mode_stability.json")
 

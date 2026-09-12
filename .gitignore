@@ -41,6 +41,22 @@ results/
 *.log
 *.tmp
 
+# Analysis outputs that each step writes next to its own script.
+# controlled_individual_profiles.tsv is per-report derived data and must not be committed.
+*.png
+*_results.json
+pipeline/4_phenotype_space/*.tsv
+pipeline/4_phenotype_space/atype_only_mode_stability.json
+pipeline/4_phenotype_space/confound_check/*.json
+validation/*/figures/
+validation/*/*/figures/
+validation/silver_labels/inter_vote_agreement_summary.txt
+ontology/domain_taxonomy.csv
+
+# Collected inputs for the R scripts, which include per-report data
+figure_source/
+table_source/
+
 # ---- Python ----
 __pycache__/
 *.py[cod]

@@ -1,17 +1,5 @@
 # -*- coding: utf-8 -*-
-"""2_1: sentence-level silver-vs-gold validation (full 489 silver / 26 gold, 19 domains).
 
-For the SAME sentence, compare which domains gold assigned vs which domains the silver
-consensus assigned. Silver is zero-shot (the gold label of a sentence was never shown during
-labeling); gold is held out for evaluation only. New schema is MULTI-LABEL (up to 3 domains
-per sentence), so we build a sentence x domain indicator and report:
-  - per-domain Precision/Recall/F1 + support (multilabel; reviewer R4 request) + primary-label confusion
-  - per-domain and pooled Spearman (silver confidence vs gold indicator, across sentence x domain cells)
-    -> on the SAME footing as the report-level Spearman, so the "report > sentence" claim is comparable.
-
-Report-level references (silver_full_vs_gold_llama_full489_26gold): pooled vector-level Spearman 0.575,
-per-domain Spearman medians A=0.70 / B=0.52 / C=0.63, per-report cosine 0.74.
-"""
 import json
 import os
 from datetime import datetime
@@ -21,14 +9,14 @@ from sklearn.metrics import precision_recall_fscore_support, confusion_matrix
 from scipy.stats import spearmanr
 
 BASE = Path(__file__).resolve().parent
-REPO_ROOT = Path(__file__).resolve().parents[3]
+REPO_ROOT = Path(__file__).resolve().parents[2]
 DATA = Path(os.environ.get(
     "SILVER_LABELING_DATA_DIR",
     REPO_ROOT / "pipeline" / "2_silver_labeling" / "data",
 ))
 SILVER = Path(os.environ.get(
     "SILVER_LABELS_JSONL",
-    DATA / "silver_label" / "silver_labels_26reports.jsonl",
+    DATA / "silver_label" / "silver_labels_489reports.jsonl",
 ))
 GOLD = Path(os.environ.get(
     "GOLD_LABELS_JSONL",
@@ -41,10 +29,10 @@ META = Path(os.environ.get(
 ))
 DOMAINS = json.load(open(META))["domain_columns"]
 DIDX = {d: i for i, d in enumerate(DOMAINS)}
-CORE_A = {"social_emotional_reciprocity", "nonverbal_communication", "relationship_play",
-          "stereotyped_behavior", "insistence_on_sameness", "restricted_interests", "sensory_processing"}
-FORMAT_C = {"test_scores", "other_general", "recommendations"}
-grp = lambda d: "A" if d in CORE_A else ("C" if d in FORMAT_C else "B")
+CORE_CO = {"social_emotional_reciprocity", "nonverbal_communication", "relationship_play",
+           "stereotyped_behavior", "insistence_on_sameness", "restricted_interests", "sensory_processing"}
+REPORT_RE = {"test_scores", "other_general", "recommendations"}
+grp = lambda d: "CO" if d in CORE_CO else ("RE" if d in REPORT_RE else "AS")
 
 def main():
     ts = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -108,7 +96,7 @@ def main():
     def med(field, gg):
         vals = [x[field] for x in per if x["group"] == gg and not (isinstance(x[field], float) and np.isnan(x[field]))]
         return round(float(np.median(vals)), 3) if vals else None
-    group_medians = {gg: {"f1": med("f1", gg), "spearman": med("spearman", gg)} for gg in ["A", "B", "C"]}
+    group_medians = {gg: {"f1": med("f1", gg), "spearman": med("spearman", gg)} for gg in ["CO", "AS", "RE"]}
 
     cm = confusion_matrix(gold_primary, silver_primary, labels=DOMAINS)
 
@@ -117,7 +105,7 @@ def main():
         macro_f1=round(float(macro), 3), micro_f1=round(float(micro), 3), weighted_f1=round(float(weighted), 3),
         pooled_spearman_sentence=round(pooled, 3),
         per_domain=per, group_medians=group_medians,
-        report_level_reference=dict(pooled_spearman=0.575, per_domain_spearman_median={"A": 0.70, "B": 0.52, "C": 0.63}, per_report_cosine=0.74),
+        report_level_reference=dict(pooled_spearman=0.575, per_domain_spearman_median={"CO": 0.70, "AS": 0.52, "RE": 0.63}, per_report_cosine=0.74),
         confusion_primary=dict(labels=DOMAINS, matrix=cm.tolist()),
     )
     out = BASE / "sentence_level_validation_results.json"
@@ -125,9 +113,9 @@ def main():
 
     print(f"n_sentences={n} (missing align={n_missing}) | macro-F1={macro:.3f} weighted-F1={weighted:.3f}")
     print(f"pooled Spearman  sentence={pooled:.3f}  vs  report={0.575}")
-    print(f"per-domain Spearman median  sentence: A={group_medians['A']['spearman']} B={group_medians['B']['spearman']} C={group_medians['C']['spearman']}")
-    print(f"                            report:   A=0.70 B=0.52 C=0.63")
-    print(f"per-domain F1 median  A={group_medians['A']['f1']} B={group_medians['B']['f1']} C={group_medians['C']['f1']}")
+    print(f"per-domain Spearman median  sentence: CO={group_medians['CO']['spearman']} AS={group_medians['AS']['spearman']} RE={group_medians['RE']['spearman']}")
+    print(f"                            report:   CO=0.70 AS=0.52 RE=0.63")
+    print(f"per-domain F1 median  CO={group_medians['CO']['f1']} AS={group_medians['AS']['f1']} RE={group_medians['RE']['f1']}")
     print("  ->", out)
 
 if __name__ == "__main__":

@@ -22,12 +22,7 @@ def _resolve_path(base_dir: Path, value: str | Path) -> str:
     path = Path(value)
     return str(path if path.is_absolute() else base_dir / path)
 
-# ============================================================
-
-# ============================================================
-
 def load_config(config_path: str) -> Dict[str, Any]:
-
     with open(config_path, encoding="utf-8") as f:
         cfg = yaml.safe_load(f)
 
@@ -45,7 +40,6 @@ def load_config(config_path: str) -> Dict[str, Any]:
     return cfg
 
 def load_domains(domains_path: str, pilot_mode: Optional[bool] = None) -> Dict[str, Any]:
-
     with open(domains_path, encoding="utf-8") as f:
         dcfg = yaml.safe_load(f)
 
@@ -80,10 +74,6 @@ def load_domains(domains_path: str, pilot_mode: Optional[bool] = None) -> Dict[s
         "active_ids": active_ids,
         "pilot_mode": pilot_mode,
     }
-
-# ============================================================
-
-# ============================================================
 
 def load_extracted_sentences(
     jsonl_path: str,
@@ -127,10 +117,6 @@ def load_extracted_sentences(
     )
 
     return report_id_array, labels_np, top_k_indices
-
-# ============================================================
-
-# ============================================================
 
 def load_silver_labels(
     silver_path: str,
@@ -190,10 +176,6 @@ def load_silver_labels(
         "Loaded silver labels for %d sentences (%d multi-label sentences)", n_lines, multi_label_lines
     )
     return labels
-
-# ============================================================
-
-# ============================================================
 
 def _allocate_weights(
     mapped: List[Tuple[str, float]],
@@ -320,10 +302,6 @@ def build_vectors(
 
     return df_proportion, df_count, df_binary, stats
 
-# ============================================================
-
-# ============================================================
-
 def save_results(
     df_proportion: pd.DataFrame,
     df_count: pd.DataFrame,
@@ -424,10 +402,6 @@ def save_results(
             print(f"  {d_def['code']:<6} {did:<35} {means[did]:>10.3f}")
     print("=" * 72)
     print(f"\n  Output: {output_dir}")
-
-# ============================================================
-# 6. CLI
-# ============================================================
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(

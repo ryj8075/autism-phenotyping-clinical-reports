@@ -23,7 +23,7 @@ else
   TOKENIZED_DIR="${TOKENIZED_DIR:-}"
 fi
 
-SILVER_LABELS="${SILVER_LABELS:-${PIPELINE_ROOT}/2_silver_labeling/data/silver_label/silver_labels_26reports.jsonl}"
+SILVER_LABELS="${SILVER_LABELS:-${PIPELINE_ROOT}/2_silver_labeling/data/silver_label/silver_labels_489reports.jsonl}"
 DOMAINS_YAML="${DOMAINS_YAML:-${REPO_ROOT}/ontology/domains_19.yaml}"
 
 K_VALUES="${K_VALUES:-5 10 15 20}"

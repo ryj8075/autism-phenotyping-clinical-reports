@@ -9,6 +9,7 @@ ks <- sort(as.integer(names(s2$per_k)))
 s6 <- do.call(rbind, lapply(ks, function(k) {
   v <- s2$per_k[[as.character(k)]]
   data.frame(k = k, GMM_BIC = round(v$gmm_bic, 1), t_BIC = round(s2$t_dist$bic, 1),
+             t_nu = round(s2$t_dist$nu, 1),
              dBIC_vs_t = round(v$dbic_vs_t, 1),
              silhouette = round(seed6$per_k[[as.character(k)]]$silhouette, 3),
              stringsAsFactors = FALSE)

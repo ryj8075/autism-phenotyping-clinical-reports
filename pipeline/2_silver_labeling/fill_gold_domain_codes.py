@@ -15,8 +15,24 @@ DEFAULT_INPUT = Path(__file__).parent / "data" / "gold_label" / "gold_labeling_t
 DEFAULT_OUTPUT = DEFAULT_INPUT
 DEFAULT_RULES = Path(__file__).parent / "config_local" / "gold_domain_rules.yaml"
 DEFAULT_SHEET = "gold_labeling"
-FALLBACK_DOMAIN = "C2"
+ONTOLOGY = Path(__file__).parent.parent.parent / "ontology" / "domains_19.yaml"
 DEFAULT_MAX_LABELS = 3
+
+def _other_general_code(path: Path = ONTOLOGY, default: str = "RE2") -> str:
+    """Code of the catch-all domain, read from the ontology so it cannot drift."""
+    try:
+        with open(path, encoding="utf-8") as f:
+            cfg = yaml.safe_load(f)
+    except OSError:
+        return default
+    for cat in cfg.get("categories", []):
+        for sub in cat.get("subcategories", []):
+            for dom in sub.get("domains", []):
+                if dom.get("id") == "other_general":
+                    return dom["code"]
+    return default
+
+FALLBACK_DOMAIN = _other_general_code()
 
 def _load_rule_file(path: Path) -> dict[str, Any]:
     if not path.exists():

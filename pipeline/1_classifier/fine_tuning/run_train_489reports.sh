@@ -11,7 +11,7 @@ if [[ -n "$CONDA_SH" && -f "$CONDA_SH" ]]; then
   conda activate "$CONDA_ENV"
 fi
 
-export CUDA_VISIBLE_DEVICES="${CUDA_VISIBLE_DEVICES:-2}"
+export CUDA_VISIBLE_DEVICES="${CUDA_VISIBLE_DEVICES:-0}"
 
 python "$SCRIPT_DIR/roberta_sentence_attention_run_ko.py" \
   --experiment_name 489samples_epoch40_153stc_128tkn_epoch40_patience10_no_headings \
@@ -22,5 +22,6 @@ python "$SCRIPT_DIR/roberta_sentence_attention_run_ko.py" \
   --lr 1e-5 \
   --save_fold_models \
   --save_intermediates \
+  --no_wandb \
   --report_max_length 153 \
   --sentence_max_length 128

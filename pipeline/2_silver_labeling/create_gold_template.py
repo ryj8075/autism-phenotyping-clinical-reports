@@ -12,13 +12,12 @@ from openpyxl.utils import get_column_letter
 
 BASE_DIR = Path(__file__).resolve().parent
 DATA_DIR = BASE_DIR / "data"
-REPORTS_DIR = BASE_DIR.parent / "data" / "all1st309" / "reports_txt_no_headings"
+REPORTS_DIR = DATA_DIR / "reports_txt_no_headings"   # = paths.input_dir in config.yaml
 OUTPUT_PATH = DATA_DIR / "outputs" / "gold_labeling_template.xlsx"
 GOLD_JSON = DATA_DIR / "gold_target_reports.json"
 
-DEFAULT_DOMAINS_FILE = BASE_DIR / "domains_19.yaml"
+DEFAULT_DOMAINS_FILE = BASE_DIR.parent.parent / "ontology" / "domains_19.yaml"
 
-# segment.py import
 sys.path.insert(0, str(BASE_DIR))
 from segment import segment_sentences
 
@@ -36,10 +35,14 @@ def load_domains_for_template(
             if domains_file and not Path(domains_file).is_absolute():
                 domains_file = str(Path(config_path).parent / domains_file)
 
+    if not domains_file and DEFAULT_DOMAINS_FILE.exists():
+        domains_file = str(DEFAULT_DOMAINS_FILE)
+
     if not domains_file:
         raise FileNotFoundError(
             "Domain file was not found.\n"
-            "  Set --domains-file or config.yaml domains_file."
+            "  Set --domains-file, or config.yaml domains_file, or keep the "
+            f"ontology at {DEFAULT_DOMAINS_FILE}."
         )
 
     with open(domains_file, encoding="utf-8") as f:
@@ -82,8 +85,9 @@ def main():
     )
     parser.add_argument(
         "--domains-file",
-        default=str(DEFAULT_DOMAINS_FILE),
-        help=f"Domain-definition YAML path (default: {DEFAULT_DOMAINS_FILE}, 19 domains)",
+        default=None,
+        help=("Domain-definition YAML path. Resolution order: this flag, then "
+              f"config.yaml domains_file, then {DEFAULT_DOMAINS_FILE} (19 domains)."),
     )
     parser.add_argument(
         "--pilot-mode",
@@ -142,9 +146,6 @@ def main():
     )
     title_font = Font(bold=True, size=14)
 
-    # ────────────────────────────────────────────────────────────
-
-    # ────────────────────────────────────────────────────────────
     ws_guide = wb.active
     ws_guide.title = "Labeling Guide"
 
@@ -183,17 +184,19 @@ def main():
     ws_guide.merge_cells(f"A{rule_start}:E{rule_start}")
     ws_guide.cell(row=rule_start, column=1, value="Labeling Rules").font = Font(bold=True, size=13)
 
-    fallback_code = "C2"
+    fallback_code, fallback_name = "RE2", "Other/general"
     for d in domains:
         if d["id"] == "other_general":
             fallback_code = d["code"]
+            fallback_name = d.get("name_en") or fallback_name
             break
+    example_codes = ", ".join(d["code"] for d in domains[:1] + domains[9:10]) or "CO1, AS3"
 
     rules = [
         "1. Enter the applicable domain code in column D (domain_code) of the gold_labeling sheet.",
-        "2. If multiple domains apply, enter all of them separated by commas (for example: A1, B3).",
+        f"2. If multiple domains apply, enter all of them separated by commas (for example: {example_codes}).",
         "3. Put the primary domain first; order reflects priority.",
-        f"4. If no domain applies, enter {fallback_code} (Other / General).",
+        f"4. If no domain applies, enter {fallback_code} ({fallback_name}).",
         "5. Use the Code column in the table above.",
         "6. Blank cells are treated as missing labels.",
     ]
@@ -209,9 +212,6 @@ def main():
     ws_guide.column_dimensions["D"].width = 32
     ws_guide.column_dimensions["E"].width = 60
 
-    # ────────────────────────────────────────────────────────────
-
-    # ────────────────────────────────────────────────────────────
     ws_label = wb.create_sheet(title="gold_labeling")
 
     label_headers = ["report_id", "sentence_idx", "sentence", "domain_code"]

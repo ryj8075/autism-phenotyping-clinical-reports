@@ -54,12 +54,13 @@ J   <- fromJSON(file.path(FS_DIR, "step11_ados_variance_share_results.json"))
 pcd <- J$per_domain_clr
 pcd <- pcd[order(pcd$contribution_pct), ]
 pcd$label <- factor(dlabel(pcd$domain), levels = dlabel(pcd$domain))
-grp  <- substr(pcd$code, 1, 1)
+grp  <- substr(pcd$code, 1, 2)
+stopifnot(all(grp %in% c("CO", "AS", "RE")))   # guards against a stale A/B/C figure_source copy
 gt   <- tapply(pcd$contribution_pct, grp, sum)            # per-group variance total
-glab <- sprintf("%s (%d%%)", GROUP_LABEL, round(gt[c("A", "B", "C")]))
-# wrap the long group-B legend label so it does not run off the panel
+glab <- sprintf("%s (%d%%)", GROUP_LABEL, round(gt[c("CO", "AS", "RE")]))
+# wrap the long group-AS legend label so it does not run off the panel
 glab[2] <- sub("co-occurring ", "co-occurring\n", glab[2])
-pcd$grp <- factor(grp, levels = c("A", "B", "C"), labels = glab)
+pcd$grp <- factor(grp, levels = c("CO", "AS", "RE"), labels = glab)
 gcols <- setNames(unname(GROUP_PAL), glab)
 pc <- ggplot(pcd, aes(contribution_pct, label, fill = grp)) +
   geom_col(width = 0.72, colour = "white", linewidth = 0.36) +

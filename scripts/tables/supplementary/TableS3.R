@@ -40,10 +40,10 @@ s3 <- do.call(rbind, lapply(doms, function(d) {
              tier_by_spearman = tier(rho), stringsAsFactors = FALSE)
 }))
 s3 <- s3[order(match(s3$code, codes)), ]
-s3$group <- substr(s3$code, 1, 1)          # A = ASD-core, B = general child-psychiatric, C = format
+s3$group <- substr(s3$code, 1, 2)          # CO = Core ASD, AS = associated/co-occurring, RE = report elements
 
 # per-group median Spearman rows appended below the per-domain rows
-grp_med <- do.call(rbind, lapply(c("A", "B", "C"), function(g) {
+grp_med <- do.call(rbind, lapply(c("CO", "AS", "RE"), function(g) {
   data.frame(code = g, domain = paste0(group_of[[g]], " (median)"),
              sentence_precision = NA_real_, sentence_recall = NA_real_,
              sentence_f1 = round(median(s3$sentence_f1[s3$group == g], na.rm = TRUE), 3),

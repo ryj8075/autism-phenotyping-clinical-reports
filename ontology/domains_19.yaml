@@ -1,38 +1,36 @@
-# ============================================================
 # Domain Definitions for the Silver-Labeling Pipeline
-# ============================================================
 
 pilot_mode: false
 
 categories:
-  - name: A. ASD Core Domains
-    name_ko: ASD Core Domains
+  - name: CO. Core ASD domains
+    name_ko: Core ASD domains
     subcategories:
       - name: Social Communication and Interaction
         name_en: Social Communication and Interaction
         domains:
-          - code: A1
+          - code: CO1
             id: social_emotional_reciprocity
-            name_ko: Social-Emotional Reciprocity
-            name_en: Social-Emotional Reciprocity
+            name_ko: Social-emotional reciprocity
+            name_en: Social-emotional reciprocity
             pilot_active: true
             description: >
               Eye contact, response to name, joint attention, reciprocal conversation,
               social smiling, and shared affect.
 
-          - code: A2
+          - code: CO2
             id: nonverbal_communication
-            name_ko: Nonverbal Communication
-            name_en: Nonverbal Communication
+            name_ko: Nonverbal communication
+            name_en: Nonverbal communication
             pilot_active: true
             description: >
               Gesture use, facial expression, body language, and understanding or
               use of nonverbal communication.
 
-          - code: A3
+          - code: CO3
             id: relationship_play
-            name_ko: Relationship and Play
-            name_en: Relationship and Play
+            name_ko: Social relationships
+            name_en: Social relationships
             pilot_active: true
             description: >
               Peer relationships, context-appropriate behavior, imaginative play,
@@ -41,60 +39,60 @@ categories:
       - name: Restricted and Repetitive Behaviors
         name_en: Restricted and Repetitive Behaviors
         domains:
-          - code: A4
+          - code: CO4
             id: stereotyped_behavior
-            name_ko: Stereotyped Behavior
-            name_en: Stereotyped Behavior
+            name_ko: Stereotyped behavior
+            name_en: Stereotyped behavior
             pilot_active: true
             description: >
               Hand flapping, body rocking, lining up objects, echolalia, and other
               repetitive movements or behaviors.
 
-          - code: A5
+          - code: CO5
             id: insistence_on_sameness
-            name_ko: Insistence on Sameness
-            name_en: Insistence on Sameness
+            name_ko: Insistence on sameness
+            name_en: Insistence on sameness
             pilot_active: true
             description: >
               Resistance to change, ritualized communication or behavior patterns,
               routine adherence, and transition difficulty.
 
-          - code: A6
+          - code: CO6
             id: restricted_interests
-            name_ko: Restricted Interests
-            name_en: Restricted Interests
+            name_ko: Restricted interests
+            name_en: Restricted interests
             pilot_active: true
             description: >
               Unusually intense focus on specific topics and restricted or fixed interests.
 
-          - code: A7
+          - code: CO7
             id: sensory_processing
-            name_ko: Sensory Processing
-            name_en: Sensory Processing
+            name_ko: Sensory reactivity
+            name_en: Sensory reactivity
             pilot_active: true
             description: >
               Sensory hyperreactivity or hyporeactivity, sensory seeking, texture
               fixation, and unusual responses to sound or visual stimuli.
 
-  - name: B. General Child Psychiatry
-    name_ko: General Child Psychiatry
+  - name: AS. Associated and co-occurring features
+    name_ko: Associated and co-occurring features
     subcategories:
       - name: Emotional and Behavioral Regulation
         name_en: Emotional and Behavioral Regulation
         domains:
-          - code: B1
+          - code: AS1
             id: externalizing
-            name_ko: Externalizing Problems
-            name_en: Externalizing Problems
+            name_ko: Externalizing behaviors
+            name_en: Externalizing behaviors
             pilot_active: false
             description: >
               Aggression, self-injury, disruptive behavior, anger outbursts, and
               hyperactive or impulsive ADHD-related behaviors.
 
-          - code: B2
+          - code: AS2
             id: internalizing
-            name_ko: Internalizing Problems
-            name_en: Internalizing Problems
+            name_ko: Internalizing behaviors
+            name_en: Internalizing behaviors
             pilot_active: false
             description: >
               Anxiety, depression, withdrawal, and fear.
@@ -102,10 +100,10 @@ categories:
       - name: Language
         name_en: Language
         domains:
-          - code: B3
+          - code: AS3
             id: language_skills
-            name_ko: Language Skills
-            name_en: Language Skills
+            name_ko: Language skills
+            name_en: Language skills
             pilot_active: false
             description: >
               Functional receptive and expressive language, everyday communication,
@@ -114,18 +112,18 @@ categories:
       - name: Physical Function and Life Skills
         name_en: Physical Function and Life Skills
         domains:
-          - code: B4
+          - code: AS4
             id: physiological_function
-            name_ko: Physiological Function
-            name_en: Physiological Function
+            name_ko: Physiological function
+            name_en: Physiological function
             pilot_active: false
             description: >
               Sleep, eating behavior, toileting, and other physiological functions.
 
-          - code: B5
+          - code: AS5
             id: adaptive_behavior
-            name_ko: Adaptive Behavior
-            name_en: Adaptive Behavior
+            name_ko: Adaptive behavior
+            name_en: Adaptive behavior
             pilot_active: false
             description: >
               Daily living skills, self-care, and social independence.
@@ -133,18 +131,18 @@ categories:
       - name: Cognitive and Neuropsychological
         name_en: Cognitive and Neuropsychological
         domains:
-          - code: B6
+          - code: AS6
             id: intelligence_learning
-            name_ko: Intelligence and Learning
-            name_en: Intelligence and Learning
+            name_ko: Intellectual functioning and learning skills
+            name_en: Intellectual functioning and learning skills
             pilot_active: false
             description: >
               Verbal or nonverbal intelligence test results and learning ability.
 
-          - code: B7
+          - code: AS7
             id: executive_function
-            name_ko: Executive Function
-            name_en: Executive Function
+            name_ko: Executive function
+            name_en: Executive function
             pilot_active: false
             description: >
               Planning, working memory, inhibitory control, attention, and distractibility.
@@ -152,46 +150,46 @@ categories:
       - name: Development and Environment
         name_en: Development and Environment
         domains:
-          - code: B8
+          - code: AS8
             id: motor_skills
-            name_ko: Motor Skills
-            name_en: Motor Skills
+            name_ko: Motor skills
+            name_en: Motor skills
             pilot_active: false
             description: >
               Gross motor development, fine motor development, and coordination.
 
-          - code: B9
+          - code: AS9
             id: family_environment
-            name_ko: Family and Environment
-            name_en: Family and Environment
+            name_ko: Family environment
+            name_en: Family environment
             pilot_active: false
             description: >
               Parenting stress, family support systems, history, and developmental background.
 
-  - name: C. Formal / Other
-    name_ko: Formal / Other
+  - name: RE. Report elements and other
+    name_ko: Report elements and other
     subcategories:
       - name: Formal and Other
         name_en: Formal and Other
         domains:
-          - code: C1
+          - code: RE1
             id: test_scores
-            name_ko: Test Scores Summary
-            name_en: Test Scores Summary
+            name_ko: Test scores
+            name_en: Test scores
             pilot_active: true
             description: >
               Scale scores, quantitative test summaries, and numeric results.
 
-          - code: C2
+          - code: RE2
             id: other_general
-            name_ko: Other / General
-            name_en: Other / General
+            name_ko: Other/general
+            name_en: Other/general
             pilot_active: true
             description: >
               Interview content, background information, demographics, referral reasons,
               and other content not directly tied to a symptom domain.
 
-          - code: C3
+          - code: RE3
             id: recommendations
             name_ko: Recommendations
             name_en: Recommendations

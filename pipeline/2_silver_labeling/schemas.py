@@ -6,7 +6,6 @@ from typing import Dict, List, Optional, Union
 from pydantic import BaseModel, Field, field_validator
 
 class DomainDef(BaseModel):
-
     code: str
     id: str
     name_ko: str
@@ -17,7 +16,6 @@ class DomainDef(BaseModel):
     subcategory: str = ""
 
 def _sort_key(code: str) -> tuple:
-
     if not code:
         return ("Z", 999)
 
@@ -32,7 +30,6 @@ def _sort_key(code: str) -> tuple:
     return (prefix, num)
 
 class DomainRegistry:
-
     FALLBACK_DOMAIN_ID = "other_general"
 
     def __init__(self, domains: List[DomainDef]):
@@ -80,7 +77,6 @@ class DomainRegistry:
         return "\n".join(lines)
 
 class LabelItem(BaseModel):
-
     domain_id: str
     domain_code: Optional[str] = None
     confidence: float = Field(default=0.0)
@@ -93,11 +89,9 @@ class LabelItem(BaseModel):
         return max(0.0, min(1.0, float(v)))
 
 class LLMResponse(BaseModel):
-
     labels: List[LabelItem] = Field(default_factory=list)
 
 class SentenceLabel(BaseModel):
-
     report_id: str
     sentence_idx: int
     sentence: str
@@ -111,7 +105,6 @@ class SentenceLabel(BaseModel):
     error: Optional[str] = None
 
 class GoldLabel(BaseModel):
-
     report_id: str
     sentence_idx: int
     sentence: str
@@ -130,7 +123,6 @@ class GoldLabel(BaseModel):
         return v
 
 class EvalMetrics(BaseModel):
-
     domain_id: str
     precision: float
     recall: float
@@ -138,7 +130,6 @@ class EvalMetrics(BaseModel):
     support: int
 
 class EvalReport(BaseModel):
-
     per_domain: List[EvalMetrics]
     accuracy: float
     macro_precision: float

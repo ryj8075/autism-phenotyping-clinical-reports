@@ -1,21 +1,3 @@
-"""
-silver_FULL vs gold report-level validation on the CURRENT canonical data.
-
-Adapted (2026-06-27) from silver_full_vs_gold_llama.py for:
-  - full silver (489 reports / 19 domains) restricted to the 26 gold-annotated reports
-  - new label schema: r["labels"] is a LIST of {domain_id, domain_code, ...} per sentence
-    (gold "labels" may be plain strings or dicts -- both handled)
-  - 19-domain order from domain_vectors_meta_latest.json
-  - canonical type-residualized ILR + ASD prototype-centroid Mahalanobis
-    (matches manuscript: _common_controlled.py load()/helmert/ilr/residualize)
-
-Outputs (suffix _full489_26gold):
-  - per-report cosine (mean, median), pooled vector-level Spearman
-  - per-domain Pearson/Spearman
-  - silver-vs-gold Mahalanobis-rank Spearman in TWO spaces:
-      (a) canonical type-residualized ILR + ASD prototype centroid (manuscript space)
-      (b) simpler raw-ILR Mahalanobis (no residualization, ASD-cohort mean/cov)
-"""
 import json
 import os
 from pathlib import Path
@@ -25,14 +7,14 @@ import pandas as pd
 from scipy.stats import spearmanr, pearsonr
 
 BASE = Path(__file__).resolve().parent
-REPO_ROOT = Path(__file__).resolve().parents[3]
+REPO_ROOT = Path(__file__).resolve().parents[2]
 RESULTS = BASE / "results"
 RESULTS.mkdir(exist_ok=True)
 
 SILVER = Path(os.environ.get(
     "SILVER_LABELS_JSONL",
     REPO_ROOT / "pipeline" / "2_silver_labeling" / "data" / "silver_label" /
-    "silver_labels_26reports.jsonl",
+    "silver_labels_489reports.jsonl",
 ))
 GOLD = Path(os.environ.get(
     "GOLD_LABELS_JSONL",
@@ -71,8 +53,7 @@ def ilr(X):
     return clr(X) @ helmert(X.shape[1])
 
 def residualize_fit(M, design):
-    """Return residuals AND the per-column OLS coefficients (so external vectors
-    can be residualized with the SAME cohort coefficients)."""
+    """Return residuals AND the per-column OLS coefficients (so external vectors can be residualized with the SAME cohort coefficients)."""
     R = np.zeros_like(M)
     B = np.zeros((design.shape[1], M.shape[1]))
     for j in range(M.shape[1]):
@@ -97,8 +78,7 @@ def main():
         print(s)
         lines.append(s)
 
-    # ---- silver_FULL: all silver labels per report (26 gold reports) ----
-    # NEW schema: r["labels"] is a list of {domain_id,...}; count EACH label.
+    # silver labels
     silver_counts = {rid: np.zeros(D) for rid in gold_reports}
     for r in silver_rows:
         rid = r["report_id"]
@@ -109,7 +89,7 @@ def main():
             if dom in domain_to_idx:
                 silver_counts[rid][domain_to_idx[dom]] += 1
 
-    # ---- gold: labels may be strings OR dicts ----
+    # gold labels
     gold_counts = {rid: np.zeros(D) for rid in gold_reports}
     for r in gold_rows:
         for lab in (r.get("labels") or []):
@@ -148,26 +128,26 @@ def main():
     pooled_rho = spearmanr(S.flatten(), G.flatten())[0]
     p(f"\nPooled vector-level Spearman: {pooled_rho:.3f}")
 
-    # per-group median Spearman: A = ASD-core (7), C = format (3), B = general child-psychiatric (rest)
-    CORE_A = {"social_emotional_reciprocity", "nonverbal_communication", "relationship_play",
-              "stereotyped_behavior", "insistence_on_sameness", "restricted_interests", "sensory_processing"}
-    FORMAT_C = {"test_scores", "other_general", "recommendations"}
-    grp = lambda dm: "A" if dm in CORE_A else ("C" if dm in FORMAT_C else "B")
-    grp_vals = {"A": [], "B": [], "C": []}
+    # per-group median Spearman: CO = Core ASD (7), RE = report elements (3), AS = the rest (9)
+    CORE_CO = {"social_emotional_reciprocity", "nonverbal_communication", "relationship_play",
+               "stereotyped_behavior", "insistence_on_sameness", "restricted_interests", "sensory_processing"}
+    REPORT_RE = {"test_scores", "other_general", "recommendations"}
+    grp = lambda dm: "CO" if dm in CORE_CO else ("RE" if dm in REPORT_RE else "AS")
+    grp_vals = {"CO": [], "AS": [], "RE": []}
     for dm in domain_list:
         rs = per_domain[dm]["spearman"]
         if not np.isnan(rs):
             grp_vals[grp(dm)].append(rs)
     p("\nPer-group median Spearman:")
-    for g, name in [("A", "ASD-core"), ("B", "general child-psychiatric"), ("C", "format")]:
+    for g, name in [("CO", "Core ASD domains"),
+                    ("AS", "Associated and co-occurring features"),
+                    ("RE", "Report elements and other")]:
         v = grp_vals[g]
         p(f"  {g} ({name}, n={len(v)}): median = {np.median(v):.3f}")
 
-    # ============================================================
     #  Mahalanobis-rank agreement (Para-3 key metric)
     #  Prototype space = 346 ASD reports, type-residualized ILR,
     #  prototype = cohort centroid + cov (manuscript canonical).
-    # ============================================================
     df = pd.read_csv(DOMAIN_VECTORS_TSV, sep="\t")
     sub = df[df["asd_label"].values == 1].reset_index(drop=True)
     rid_asd = sub["report_id"].values
@@ -223,7 +203,7 @@ def main():
     p("report-type design (A vs P). This is the consistent linear residualization; it is NOT")
     p("a re-fit on the 26 external vectors. Both silver and gold use the identical projection.")
 
-    # per-report Mahalanobis + top-decile tail-membership agreement (for supplementary table)
+    # per-report Mahalanobis + top-decile tail-membership agreement
     per_report_mahal = [dict(report_id=rid,
                              silver_mahal_res=round(float(s_mahal_res[i]), 3),
                              gold_mahal_res=round(float(g_mahal_res[i]), 3),
@@ -237,7 +217,6 @@ def main():
                 n_both_in_tail=int(np.sum(s_tail & g_tail)),
                 n_silver_tail=int(s_tail.sum()), n_gold_tail=int(g_tail.sum()))
 
-    # ---- write outputs ----
     txt = RESULTS / "output_full_vs_gold_llama_full489_26gold.txt"
     txt.write_text("\n".join(lines) + "\n")
 

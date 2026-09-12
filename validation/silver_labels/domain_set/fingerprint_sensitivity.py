@@ -1,21 +1,5 @@
 # -*- coding: utf-8 -*-
-"""step3: is H4 (two-layer fingerprint) robust to dropping / down-weighting low-fidelity domains?
 
-Layer 1 (prototypicality): full-covariance Mahalanobis on the residual PCA scores (identical to
-step7_normative). For each variant we report mean/p90/max/top-decile AND, crucially, the rank
-Spearman + top-decile overlap against the baseline_full19 ordering -- i.e. does removing/shrinking
-weak domains preserve WHO is atypical? We also track the manuscript example patient
-REPORT-066-A01 (baseline Mahalanobis ~6.18, top ~4%).
-
-Layer 2 (normative structure): between/within variance decomposition of the residual space under
-the stable 2-way (core-vs-periphery) GMM split (identical to step9_variance), with a permutation
-null. Baseline between-fraction is ~14.8%.
-
-NOTE: the Layer-1 rank agreement here is INTERNAL robustness to domain choice, NOT silver-vs-gold
-validation. Silver-vs-gold patient ordering is separately weak (Table S14, rho=-0.34); per the
-2026-07-07 guidance the fingerprint is framed as a candidate summary, so the claim tested here is
-only "the structure survives dropping weak domains", not "individual extremity is validated".
-"""
 import sys, json
 from pathlib import Path
 import numpy as np
@@ -23,7 +7,7 @@ from scipy.stats import spearmanr
 
 BASE = Path(__file__).resolve().parent
 sys.path.insert(0, str(BASE.parent))
-import _sensitivity_common as sc               # noqa: E402
+import _sensitivity_common as sc
 cc = sc.cc
 EXAMPLE = "REPORT-066-A01"
 N_PERM = 1000

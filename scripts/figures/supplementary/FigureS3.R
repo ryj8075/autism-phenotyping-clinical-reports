@@ -12,7 +12,7 @@ FS  <- 8
 TAG <- 8
 GEOM <- FS / .pt
 
-DATA <- file.path(FS_DIR, "attention_faithfulness_test1_results.json")
+DATA <- file.path(FS_DIR, "attention_faithfulness_results.json")
 
 C_TOP  <- PAL$blue
 C_RAND <- PAL$grey

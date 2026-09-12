@@ -1,17 +1,8 @@
 # -*- coding: utf-8 -*-
 """Report-type confound, figure data for Supplementary Figure S4.
 
-Companion to confound_reanalysis.py, which runs the same confound check on all 489
-reports. This one is restricted to the 346 ASD reports, so report type is not
-confounded with diagnosis, and it writes only the quantities the figure needs.
-The output is copied into figure_source/report_type_confound.json, which
-scripts/figures/supplementary/FigureS4.R reads.
-
-Panel a: per-domain share of CLR variance explained by report type (19 domains),
-         with BH-FDR q, on the 346 ASD reports.
-Panel b: first principal component of the ILR representation before and after
-         type-residualization, per report, with its point-biserial correlation
-         to report type.
+Restricted to the 346 ASD reports, so report type is not confounded with
+diagnosis, and it writes only the quantities the figure needs.
 
 Run with the Python environment that provides numpy, pandas, scipy, and sklearn.
 """
@@ -44,7 +35,7 @@ def main():
     t = (rtype == "P").astype(float)                    # 1 = psychological assessment report
     n = len(P)
 
-    # ---- panel a: per-domain CLR variance explained by report type ----
+    # per-domain CLR variance explained by report type
     CLR = cc.clr(P)
     r2, pv = [], []
     for g in range(CLR.shape[1]):
@@ -52,10 +43,10 @@ def main():
         r2.append(float(r ** 2)); pv.append(float(p))
     q = bh_fdr(pv)
 
-    # ---- ILR variance share by report type (reported in Methods) ----
+    # ILR variance share by report type
     ilr_r2 = [float(stats.pearsonr(d["ILR"][:, j], t)[0] ** 2) for j in range(d["ILR"].shape[1])]
 
-    # ---- panel b: PC1 before vs after residualization ----
+    # PC1 before vs after residualization
     pc1_raw = cc.pca_scores(d["ILR"])[1][:, 0]
     pc1_res = cc.pca_scores(d["RES"])[1][:, 0]
     r_raw = float(stats.pearsonr(pc1_raw, t)[0])

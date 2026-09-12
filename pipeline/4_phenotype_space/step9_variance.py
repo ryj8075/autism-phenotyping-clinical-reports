@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
-"""step14 (controlled): within-vs-between variance decomposition on type-residual ASD-248.
-Reports eta2 (between mode/coarse-position vs within individual) for residual GMM k=4 and
-the stable 2-way (core vs periphery), with permutation null + raw k=4 reference."""
+
 import sys, os, json
 import numpy as np
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
