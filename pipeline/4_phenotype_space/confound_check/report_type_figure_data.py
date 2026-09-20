@@ -46,11 +46,11 @@ def main():
     # ILR variance share by report type
     ilr_r2 = [float(stats.pearsonr(d["ILR"][:, j], t)[0] ** 2) for j in range(d["ILR"].shape[1])]
 
-    # PC1 before vs after residualization
+    # PC1 before vs after adjustment for report type
     pc1_raw = cc.pca_scores(d["ILR"])[1][:, 0]
-    pc1_res = cc.pca_scores(d["RES"])[1][:, 0]
+    pc1_adj = cc.pca_scores(d["RES"])[1][:, 0]
     r_raw = float(stats.pearsonr(pc1_raw, t)[0])
-    r_res = float(stats.pearsonr(pc1_res, t)[0])
+    r_adj = float(stats.pearsonr(pc1_adj, t)[0])
 
     out = {
         "n_reports": int(n),
@@ -62,9 +62,9 @@ def main():
                     "significant_q10": [bool(x <= 0.10) for x in q]},
         "panel_b": {"report_type": ["P" if x == "P" else "A" for x in rtype],
                     "pc1_raw": [round(float(x), 4) for x in pc1_raw],
-                    "pc1_residual": [round(float(x), 4) for x in pc1_res],
+                    "pc1_adjusted": [round(float(x), 4) for x in pc1_adj],
                     "corr_pc1_type_raw": round(r_raw, 3),
-                    "corr_pc1_type_residual": round(r_res, 3)},
+                    "corr_pc1_type_adjusted": round(r_adj, 3)},
         "ilr_variance_share_by_type": {"mean": round(float(np.mean(ilr_r2)), 4),
                                        "max": round(float(np.max(ilr_r2)), 4)},
     }
@@ -76,7 +76,7 @@ def main():
           f"| max {out['ilr_variance_share_by_type']['max']*100:.1f}%")
     print(f"PC1 r^2 by report type: {r_raw**2*100:.1f}%")
     print(f"domains with FDR q <= 0.10: {sum(out['panel_a']['significant_q10'])} of {len(dom)}")
-    print(f"PC1 correlation with report type: {r_raw:.3f} (raw) -> {r_res:.3f} (residual)")
+    print(f"PC1 correlation with report type: {r_raw:.3f} (unadjusted) -> {r_adj:.3f} (type-adjusted)")
     print("  ->", OUT)
 
 if __name__ == "__main__":

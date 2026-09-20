@@ -3,8 +3,8 @@
 # (a) share of each domain's CLR variance explained by report type across the 346 ASD
 #    reports, with Benjamini-Hochberg FDR.
 # (b) first principal component of the ILR representation before and after
-#    type-residualization, split by documentation stream. The separation before the
-#    control is the confound; after residualization PC1 is orthogonal to report type
+#    type-adjustment, split by documentation stream. The separation before adjustment
+#    is the confound; after adjustment PC1 is orthogonal to report type
 #    by construction.
 rm(list = ls())
 source("../_common.R")
@@ -46,23 +46,23 @@ pa <- ggplot(a_df, aes(label, r2, fill = group)) +
         axis.text.y = element_text(size = FS, family = FONT, colour = "black"),
         plot.margin = margin(6, 8, 6, 4))
 
-# (b) PC1 before and after residualization
+# (b) PC1 before and after adjustment
 b_df <- rbind(
-  data.frame(stage = "before control", type = d$panel_b$report_type,
+  data.frame(stage = "unadjusted", type = d$panel_b$report_type,
              pc1 = as.numeric(d$panel_b$pc1_raw)),
-  data.frame(stage = "type-residual", type = d$panel_b$report_type,
-             pc1 = as.numeric(d$panel_b$pc1_residual))
+  data.frame(stage = "type-adjusted", type = d$panel_b$report_type,
+             pc1 = as.numeric(d$panel_b$pc1_adjusted))
 )
-b_df$stage <- factor(b_df$stage, levels = c("before control", "type-residual"))
+b_df$stage <- factor(b_df$stage, levels = c("unadjusted", "type-adjusted"))
 b_df$type  <- factor(b_df$type, levels = c("A", "P"),
                      labels = c("A-type", "P-type"))
 
 r_raw <- d$panel_b$corr_pc1_type_raw
-r_res <- d$panel_b$corr_pc1_type_residual
+r_adj <- d$panel_b$corr_pc1_type_adjusted
 ann <- data.frame(
-  stage = factor(c("before control", "type-residual"),
-                 levels = c("before control", "type-residual")),
-  lab = c(sprintf("r = %.2f", abs(r_raw)), sprintf("r = %.2f", abs(r_res))),
+  stage = factor(c("unadjusted", "type-adjusted"),
+                 levels = c("unadjusted", "type-adjusted")),
+  lab = c(sprintf("r = %.2f", abs(r_raw)), sprintf("r = %.2f", abs(r_adj))),
   y = max(b_df$pc1) * 1.06
 )
 
