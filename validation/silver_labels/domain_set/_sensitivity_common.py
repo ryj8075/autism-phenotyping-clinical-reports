@@ -72,3 +72,31 @@ def build_variants(d):
                          ilr_dim=len(dom) - 1,
                          weights={dom[i]: round(float(w[i]), 3) for i in range(len(dom))})
     return out, dom
+
+
+def bestk_stability(lead, k, seed=None, n_seeds=30, n_boot=1000):
+    """Reproducibility of the BIC-preferred partition, as in topk_sensitivity.cluster_stability_ari:
+    cross-seed ARI over n_seeds single-init fits, and bootstrap ARI of a refit on a resample against
+    the reference partition. Reported alongside the k = 2 value so the table shows both the coarsest
+    split and the split BIC actually prefers."""
+    import numpy as np
+    from itertools import combinations
+    from sklearn.mixture import GaussianMixture
+    from sklearn.metrics import adjusted_rand_score
+    seed = cc.SEED if seed is None else seed
+    n = lead.shape[0]
+    g = lambda kk, s, ni: GaussianMixture(kk, covariance_type="full", n_init=ni,
+                                          max_iter=500, random_state=s)
+    labs = [g(k, s, 1).fit(lead).predict(lead) for s in range(n_seeds)]
+    seed_aris = [adjusted_rand_score(labs[i], labs[j]) for i, j in combinations(range(n_seeds), 2)]
+    rng = np.random.default_rng(seed)
+    ref = g(k, seed, 10).fit(lead).predict(lead)
+    boot = np.empty(n_boot)
+    for b in range(n_boot):
+        idx = rng.integers(0, n, size=n)
+        boot[b] = adjusted_rand_score(ref, g(k, b, 10).fit(lead[idx]).predict(lead))
+    return {"k": int(k),
+            "cross_seed_ari": round(float(np.mean(seed_aris)), 3),
+            "bootstrap_ari": round(float(boot.mean()), 3),
+            "bootstrap_ari_ci95": [round(float(np.percentile(boot, 2.5)), 3),
+                                   round(float(np.percentile(boot, 97.5)), 3)]}

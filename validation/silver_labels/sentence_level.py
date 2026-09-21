@@ -36,7 +36,9 @@ grp = lambda d: "CO" if d in CORE_CO else ("RE" if d in REPORT_RE else "AS")
 
 def main():
     ts = datetime.now().strftime("%Y%m%d_%H%M%S")
-    # index silver by (report_id, sentence_idx): domain -> max consensus confidence
+    # index silver by (report_id, sentence text): domain -> max consensus confidence.
+    # Sentence indices are not aligned between the two files for 5 reports (70 sentences),
+    # while the sentence text of every report matches exactly, so we pair on text.
     sil = {}
     for l in open(SILVER):
         if not l.strip():
@@ -48,14 +50,14 @@ def main():
             c = float(lab.get("confidence", 1.0)) if isinstance(lab, dict) else 1.0
             if d in DIDX:
                 conf[d] = max(conf.get(d, 0.0), c)
-        sil[(r["report_id"], r["sentence_idx"])] = conf
+        sil[(r["report_id"], r["sentence"].strip())] = conf
 
     gold_rows = [json.loads(l) for l in open(GOLD) if l.strip()]
     n_missing = 0
     G, S_bin, S_conf = [], [], []          # sentence x domain
     gold_primary, silver_primary = [], []
     for g in gold_rows:
-        key = (g["report_id"], g["sentence_idx"])
+        key = (g["report_id"], g["sentence"].strip())
         if key not in sil:
             n_missing += 1
             continue
@@ -105,7 +107,7 @@ def main():
         macro_f1=round(float(macro), 3), micro_f1=round(float(micro), 3), weighted_f1=round(float(weighted), 3),
         pooled_spearman_sentence=round(pooled, 3),
         per_domain=per, group_medians=group_medians,
-        report_level_reference=dict(pooled_spearman=0.575, per_domain_spearman_median={"CO": 0.70, "AS": 0.52, "RE": 0.63}, per_report_cosine=0.74),
+        report_level_reference=dict(pooled_spearman=0.575, per_domain_spearman_median={"CO": 0.72, "AS": 0.55, "RE": 0.72}, per_report_cosine=0.738, aggregation="1/m mass rule"),
         confusion_primary=dict(labels=DOMAINS, matrix=cm.tolist()),
     )
     out = BASE / "sentence_level_validation_results.json"
@@ -114,7 +116,7 @@ def main():
     print(f"n_sentences={n} (missing align={n_missing}) | macro-F1={macro:.3f} weighted-F1={weighted:.3f}")
     print(f"pooled Spearman  sentence={pooled:.3f}  vs  report={0.575}")
     print(f"per-domain Spearman median  sentence: CO={group_medians['CO']['spearman']} AS={group_medians['AS']['spearman']} RE={group_medians['RE']['spearman']}")
-    print(f"                            report:   CO=0.70 AS=0.52 RE=0.63")
+    print(f"                            report:   CO=0.72 AS=0.55 RE=0.72")
     print(f"per-domain F1 median  CO={group_medians['CO']['f1']} AS={group_medians['AS']['f1']} RE={group_medians['RE']['f1']}")
     print("  ->", out)
 

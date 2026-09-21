@@ -1,9 +1,7 @@
 #!/usr/bin/env Rscript
-# =====================================================================
 # Shared setup for the MAIN table scripts.
 # Each TableN.R sources this, then writes one XLSX.
 #   Canonical = full silver, 489 reports / 19 domains.
-# =====================================================================
 rm(list = ls())
 
 .script_dir <- function() {

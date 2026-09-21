@@ -21,11 +21,14 @@ get_domains <- function(labels) {
 }
 zero <- function() matrix(0, length(reps), ndom, dimnames = list(reps, doms))
 Sc <- zero(); Gc <- zero()
-for (r in silver) { rid <- r$report_id; if (rid %in% reps) for (d in get_domains(r$labels)) if (d %in% doms) Sc[rid, d] <- Sc[rid, d] + 1 }
-for (r in gold)   { rid <- r$report_id; for (d in get_domains(r$labels)) if (d %in% doms) Gc[rid, d] <- Gc[rid, d] + 1 }
+for (r in silver) { rid <- r$report_id; if (!(rid %in% reps)) next
+  dl <- get_domains(r$labels); dl <- dl[dl %in% doms]; if (!length(dl)) next
+  for (d in dl) Sc[rid, d] <- Sc[rid, d] + 1 / length(dl) }
+for (r in gold) { rid <- r$report_id
+  dl <- get_domains(r$labels); dl <- dl[dl %in% doms]; if (!length(dl)) next
+  for (d in dl) Gc[rid, d] <- Gc[rid, d] + 1 / length(dl) }
 S <- Sc / pmax(rowSums(Sc), 1); G <- Gc / pmax(rowSums(Gc), 1)
 
-tier <- function(rho) if (is.na(rho)) "weak" else if (rho >= 0.80) "strong" else if (rho >= 0.60) "moderate" else "weak"
 s3 <- do.call(rbind, lapply(doms, function(d) {
   s <- S[, d]; g <- G[, d]; ok <- sd(s) > 1e-10 && sd(g) > 1e-10
   rho <- if (ok) suppressWarnings(cor(s, g, method = "spearman")) else NA_real_
@@ -36,8 +39,7 @@ s3 <- do.call(rbind, lapply(doms, function(d) {
              sentence_f1        = round(unname(sf1[d]), 3),
              sentence_support   = unname(ssup[d]),
              report_pearson = round(prs, 3), report_spearman = round(rho, 3),
-             silver_mean_prop = round(mean(s), 3), gold_mean_prop = round(mean(g), 3),
-             tier_by_spearman = tier(rho), stringsAsFactors = FALSE)
+             silver_mean_prop = round(mean(s), 3), gold_mean_prop = round(mean(g), 3), stringsAsFactors = FALSE)
 }))
 s3 <- s3[order(match(s3$code, codes)), ]
 s3$group <- substr(s3$code, 1, 2)          # CO = Core ASD, AS = associated/co-occurring, RE = report elements
@@ -50,8 +52,7 @@ grp_med <- do.call(rbind, lapply(c("CO", "AS", "RE"), function(g) {
              sentence_support = NA_integer_,
              report_pearson = NA_real_,
              report_spearman = round(median(s3$report_spearman[s3$group == g], na.rm = TRUE), 3),
-             silver_mean_prop = NA_real_, gold_mean_prop = NA_real_,
-             tier_by_spearman = NA_character_, group = g, stringsAsFactors = FALSE)
+             silver_mean_prop = NA_real_, gold_mean_prop = NA_real_, group = g, stringsAsFactors = FALSE)
 }))
 out <- rbind(s3, grp_med)
 out$group <- unname(group_of[out$group])   # spell the group out, as in Table 1 and the figure legends

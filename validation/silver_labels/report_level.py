@@ -53,7 +53,15 @@ def ilr(X):
     return clr(X) @ helmert(X.shape[1])
 
 def residualize_fit(M, design):
-    """Return residuals AND the per-column OLS coefficients (so external vectors can be residualized with the SAME cohort coefficients)."""
+    """Return residuals AND the per-column OLS coefficients (so external vectors can be residualized with the SAME cohort coefficients).
+AGGREGATION (v2, 2026-09-20): a sentence contributes one unit of mass, divided
+equally among the m domains it received (the 1/m rule the manuscript defines for
+the domain-frequency vectors). v1 added 1 per label, which weighted multi-label
+sentences more heavily; silver averages 2.33 labels per sentence against 1.08 for
+gold, so the two label sets were affected unequally. See
+validation/1_silver_report_level_validation/1_2_mass_weighted_report_level/ for
+the side-by-side comparison of the two rules.
+"""
     R = np.zeros_like(M)
     B = np.zeros((design.shape[1], M.shape[1]))
     for j in range(M.shape[1]):
@@ -84,18 +92,18 @@ def main():
         rid = r["report_id"]
         if rid not in silver_counts:
             continue
-        for lab in (r.get("labels") or []):
-            dom = lab.get("domain_id") if isinstance(lab, dict) else lab
-            if dom in domain_to_idx:
-                silver_counts[rid][domain_to_idx[dom]] += 1
+        doms = [d for d in ((lab.get("domain_id") if isinstance(lab, dict) else lab)
+                            for lab in (r.get("labels") or [])) if d in domain_to_idx]
+        for dom in doms:
+            silver_counts[rid][domain_to_idx[dom]] += 1.0 / len(doms)
 
     # gold labels
     gold_counts = {rid: np.zeros(D) for rid in gold_reports}
     for r in gold_rows:
-        for lab in (r.get("labels") or []):
-            dom = lab.get("domain_id") if isinstance(lab, dict) else lab
-            if dom in domain_to_idx:
-                gold_counts[r["report_id"]][domain_to_idx[dom]] += 1
+        doms = [d for d in ((lab.get("domain_id") if isinstance(lab, dict) else lab)
+                            for lab in (r.get("labels") or [])) if d in domain_to_idx]
+        for dom in doms:
+            gold_counts[r["report_id"]][domain_to_idx[dom]] += 1.0 / len(doms)
 
     S = np.stack([silver_counts[r] / max(silver_counts[r].sum(), 1) for r in gold_reports])
     G = np.stack([gold_counts[r] / max(gold_counts[r].sum(), 1) for r in gold_reports])

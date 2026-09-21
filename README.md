@@ -99,7 +99,7 @@ bash validation/attention_selection/run_all.sh
 bash validation/vector_robustness/run_topk_sensitivity.sh
 ```
 
-The silver-label and score-space checks are run one script at a time. Under `validation/silver_labels/`, run `sentence_level.py` and `report_level.py` before anything in `domain_set/`, which reads their output.
+The silver-label and score-space checks are run one script at a time. Under `validation/silver_labels/`, run `sentence_level.py` and `report_level.py` before anything in `domain_set/`, which reads their output. `top10_report_level.py` repeats the report-level check on the ten attention-selected sentences the phenotype vectors are built from, and reads the output of `report_level.py`, so run it after that.
 
 ### Figures and tables
 
@@ -164,6 +164,7 @@ Defaults assume the layout in this repository. Override them when your data sits
 | `CLASSIFIER_INTERMEDIATES_DIR`, `CLASSIFIER_METADATA_CSV` | Stage 1 intermediates and the report metadata CSV, read by `FigureS1_make_data.py` |
 | `OPENAI_API_KEY`, `ANTHROPIC_API_KEY` | Stage 2, only when `config.yaml` selects the `openai` or `anthropic` provider instead of the local model |
 | `SILVER_LABELING_DATA_DIR` | Folder holding the silver and gold label files, read by `validation/silver_labels/sentence_level.py` |
+| `HIGH_ATTENTION_SENTENCES_TSV` | Stage 3 ten-sentence selection table, read by `validation/silver_labels/top10_report_level.py` |
 | `SILVER_VALIDATION_DIR` | Folder holding the sentence-level and report-level validation outputs, read by `domain_set/` |
 | `REPORT_LLM_DATA_ROOT`, `PHENOTYPE_TABLE_LONG` | Standardized clinical score table for `validation/score_space/` |
 | `DOMAIN_MATCHING_DETAILS_JSON` | Stage 3 sentence-to-label matching record, read by `validation/score_space/reconstruction_asymmetry.py` |

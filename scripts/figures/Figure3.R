@@ -22,9 +22,11 @@ get_domains <- function(labels) {
   as.character(unlist(labels))
 }
 for (r in silver_rows) { rid <- r$report_id; if (!(rid %in% gold_reports)) next
-  for (dl in get_domains(r$labels)) if (dl %in% dom) Scnt[rid, dl] <- Scnt[rid, dl] + 1 }
+  dl <- get_domains(r$labels); dl <- dl[dl %in% dom]; if (!length(dl)) next
+  for (d in dl) Scnt[rid, d] <- Scnt[rid, d] + 1 / length(dl) }
 for (r in gold_rows) { rid <- r$report_id
-  for (dl in get_domains(r$labels)) if (dl %in% dom) Gcnt[rid, dl] <- Gcnt[rid, dl] + 1 }
+  dl <- get_domains(r$labels); dl <- dl[dl %in% dom]; if (!length(dl)) next
+  for (d in dl) Gcnt[rid, d] <- Gcnt[rid, d] + 1 / length(dl) }
 S <- Scnt / pmax(rowSums(Scnt), 1)
 G <- Gcnt / pmax(rowSums(Gcnt), 1)
 
@@ -51,7 +53,6 @@ BLUE <- "#35618F"; MIDW <- "#F7F7F7"; RED <- "#C15B4E"
 
 p <- ggplot(map, aes(x = rv, y = label)) +
   geom_vline(xintercept = 0, colour = "#c2c8d2", linewidth = 0.4) +
-  geom_vline(xintercept = c(0.60, 0.80), linetype = "22", colour = "#b8bfc9", linewidth = 0.36) +
   geom_segment(aes(x = 0, xend = rv, yend = label, colour = r), linewidth = 1.1, lineend = "round") +
   geom_point(aes(fill = r), shape = 21, size = 3.0, stroke = 0.4, colour = "grey35") +
   geom_text(aes(label = txt, hjust = ifelse(rv < 0, 1.3, -0.3)), size = 2.82,

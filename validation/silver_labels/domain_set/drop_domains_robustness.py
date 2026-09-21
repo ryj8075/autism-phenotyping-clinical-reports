@@ -47,7 +47,8 @@ def analyze(P, dom, design, keep):
                 t_bic=round(tbic, 1), best_gmm_k=bk, best_gmm_bic=round(gbic[bk], 1),
                 dbic_t_minus_gmm=round(gbic[bk] - tbic, 1), t_wins=bool(gbic[bk] > tbic),
                 cross_seed_ari_k2=round(cross_seed_ari(lead, 2), 3),
-                cross_seed_ari_k4=round(cross_seed_ari(lead, 4), 3))
+                cross_seed_ari_k4=round(cross_seed_ari(lead, 4), 3),
+                bestk_stability=sc.bestk_stability(lead, bk))
 
 def main():
     d = cc.load()
